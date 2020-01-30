@@ -3,6 +3,7 @@
 ##
 ## common settings and setting for the webserver
 airflow:
+  loadExamples: true
   extraConfigmapMounts: []
   # - name: extra-metadata
   #   mountPath: /opt/metadata
@@ -67,7 +68,7 @@ airflow:
     repository: puckel/docker-airflow
     ##
     ## image tag
-    tag: 1.10.4
+    tag: 1.10.7
     ##
     ## Image pull policy
     ## values: Always or IfNotPresent
@@ -327,7 +328,7 @@ workers:
   secretsDir: /var/airflow/secrets
   ##
   ## Secrets which will be mounted as a file at `secretsDir/<secret name>`.
-  secrets: []
+  secrets: [dev-airflo-postgres]
 
   ## Support Node, affinity and tolerations for worker pod assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
@@ -524,19 +525,19 @@ dags:
   git:
     ##
     ## url to clone the git repository
-    url:
+    url: https://github.com/flocasts/airflo.git
     ##
     ## branch name, tag or sha1 to reset to
-    ref: master
+    ref: dev
     ## pre-created secret with key, key.pub and known_hosts file for private repos
-    secret: ""
+    secret: dev-airflo-git
     ## The host of the repo so for example if a github repo put github.com (Only need if using ssh not https git sync)
-    repoHost: ""
+    repoHost: "github.com"
     ## The name of the private key in your git sync secret (Only need if using ssh not https git sync)
     privateKeyName: ""
     gitSync:
       ## Turns on the side car container
-      enabled: false
+      enabled: true
       ## Image for the side car container
       image:
         ## docker-airflow image
@@ -547,10 +548,10 @@ dags:
         ## values: Always or IfNotPresent
         pullPolicy: IfNotPresent
       ## The amount of time in seconds to git pull dags
-      refreshTime:
+      refreshTime: 600 #3600
   initContainer:
     ## Fetch the source code when the pods starts
-    enabled: false
+    enabled: true
     ## Image for the init container (any image with git will do)
     image:
       ## docker-airflow image
@@ -597,9 +598,11 @@ postgresql:
 
   ##
   ## The name of an existing secret that contains the postgres password.
-  existingSecret:
+  # existingSecret: dev-airflo-postgresql
+  existingSecret: dev-airflo-postgres
 
   ## Name of the key containing the secret.
+  # existingSecretKey: postgresql-password
   existingSecretKey: postgres-password
 
   ##
@@ -644,7 +647,7 @@ redis:
 
   ##
   ## The name of an existing secret that contains the redis password.
-  existingSecret:
+  existingSecret: dev-airflo-redis
 
   ## Name of the key containing the secret.
   existingSecretKey: redis-password

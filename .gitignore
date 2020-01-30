@@ -1,3 +1,26 @@
-*~
-build
-rootfs
+# Directories #
+###############
+build/
+rootfs/
+tmp/
+venv/
+
+# Project generated files #
+###########################
+*.bak
+*.log
+*.properties
+*.pyc
+*.zip
+package-lock.json
+run.sh
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

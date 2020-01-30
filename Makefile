@@ -1,4 +1,4 @@
-AIRFLOW_VERSION ?= 1.8.0.0
+AIRFLOW_VERSION ?= 1.8.0
 KUBECTL_VERSION ?= 1.6.1
 KUBE_AIRFLOW_VERSION ?= 0.10
 
@@ -18,40 +18,44 @@ AIRFLOW_REQUIREMENTS ?= $(BUILD_ROOT)/requirements/airflow.txt
 DAGS_REQUIREMENTS ?= $(BUILD_ROOT)/requirements/dags.txt
 DOCKER_CACHE ?= docker-cache
 SAVED_IMAGE ?= $(DOCKER_CACHE)/image-$(AIRFLOW_VERSION)-$(KUBECTL_VERSION).tar
+AIRFLOW_HOME=/usr/local/airflow
 
-NAMESPACE ?= airflow-dev
-HELM_APPLICATION_NAME ?= airflow
-HELM_VALUES ?= airflow/values.yaml
+NAMESPACE ?= ns-andrew-tan
+HELM_APPLICATION_NAME ?= dev-airflo
+HELM_VALUES ?= ./values.yaml
 CHART_LOCATION ?= ./airflow
+CHART_PKG_LOCATION ?= stable/airflow
+# CHART_PKG_LOCATION ?= ./airflow-5.2.5.tgz
 EMBEDDED_DAGS_LOCATION ?= "./dags"
 REQUIREMENTS_TXT_LOCATION ?= "requirements/dags.txt"
+PASS_GEN ?= "$ (openssl rand -base64 13)"
 
 .PHONY: build clean
 
 clean:
 	rm -Rf build
 
-helm-install:
+start:
 	helm upgrade -f $(HELM_VALUES) \
+				 --namespace=$(NAMESPACE) \
 	             --install \
 	             --debug \
 	             $(HELM_APPLICATION_NAME) \
-	             $(CHART_LOCATION)
+	             $(CHART_PKG_LOCATION)
 
-helm-check:
-	helm install --dry_run \
-	            $(CHART_LOCATION) \
-	             --version=v0.1.0 \
-	             --name=$(HELM_APPLICATION_NAME) \
+check:
+	helm install --dry-run \
 	             --namespace=$(NAMESPACE) \
 	             --debug \
-	             -f $(HELM_VALUES)
+	             -f $(HELM_VALUES) \
+				 $(HELM_APPLICATION_NAME) \
+				 $(CHART_PKG_LOCATION)
 
-helm-ls:
-	helm ls --all $(HELM_APPLICATION_NAME)
+ls:
+	helm ls --namespace=$(NAMESPACE)
 
-helm-uninstall:
-	helm del --purge $(HELM_APPLICATION_NAME)
+stop: delete
+	helm delete $(HELM_APPLICATION_NAME)
 
 build: clean $(DOCKERFILE) $(ROOTFS) $(DAGS) $(AIRFLOW_CONF) $(ENTRYPOINT_SH) $(GIT_SYNC) $(AIRFLOW_REQUIREMENTS) $(DAGS_REQUIREMENTS)
 	cd $(BUILD_ROOT) && docker build -t $(IMAGE) . && docker tag $(IMAGE) $(ALIAS)
@@ -115,23 +119,42 @@ load-docker-cache: $(DOCKER_CACHE)
 $(DOCKER_CACHE):
 	mkdir -p $(DOCKER_CACHE)
 
-create:
+create: set-config
 	if ! kubectl get namespace $(NAMESPACE) >/dev/null 2>&1; then \
 	  kubectl create namespace $(NAMESPACE); \
 	fi
-	kubectl create -f airflow.all.yaml --namespace $(NAMESPACE)
+	helm package $(CHART_LOCATION)
 
-apply:
-	kubectl apply -f airflow.all.yaml --namespace $(NAMESPACE)
-
-delete:
-	kubectl delete -f airflow.all.yaml --namespace $(NAMESPACE)
-
-list-pods:
-	kubectl get po -a --namespace $(NAMESPACE)
+ref:
+	@echo export RAND_PASS=$ openssl rand -base64 13
+	@echo kubectl exec $ WORKER -c airflow-worker -it -- /bin/bash
+	@echo kubectl create secret generic $(HELM_APPLICATION_NAME)-git --from-file=id_rsa=./id_rsa --from-file=known_hosts=./known_hosts --from-file=id_rsa.pub=./id_rsa.pub
+	@echo kubectl create secret generic $(HELM_APPLICATION_NAME)-postgres --from-literal=postgres-password='RAND_PASS'
+	@echo kubectl create secret generic $(HELM_APPLICATION_NAME)-postgresql --from-literal=postgresql-password='RAND_PASS'
+	@echo kubectl create secret generic $(HELM_APPLICATION_NAME)-redis --from-literal=redis-password='RAND_PASS'
+	@echo docker-machine start default
+	@echo docker-machine env
 
 browse-web:
 	minikube service web -n $(NAMESPACE)
 
 browse-flower:
 	minikube service flower -n $(NAMESPACE)
+
+delete:
+	kubectl delete pods,services --all --namespace=$(NAMESPACE)
+	# Alternative (last-resort)
+	# kubectl delete -f airflow.all.yaml --namespace=$(NAMESPACE) --all
+
+get-all:
+	kubectl get all --namespace $(NAMESPACE)
+	# kubectl get all --all-namespaces
+
+get-config:
+	kubectl config get-contexts
+
+status:
+	helm status $(HELM_APPLICATION_NAME)
+
+set-config:
+	kubectl config set-context --current --namespace=$(NAMESPACE)
