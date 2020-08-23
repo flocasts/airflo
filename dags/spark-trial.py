@@ -22,7 +22,7 @@ volume_config = {
 }
 volume = Volume(name='persist-disk', configs=volume_config)
 dag = DAG(
-    'k8-example-v1',
+    'spark-trial',
     max_active_runs=1,
     catchup=False,
     schedule_interval=timedelta(days=365)
@@ -56,22 +56,13 @@ bash_baseline = KubernetesPodOperator(
     dag=dag
 )
 
-pyspark_baseline = KubernetesPodOperator(
+pyspark_segmentation = KubernetesPodOperator(
     image="atherin/pyspark:2.4.4",
     cmds=["python"],
-    arguments=["/airflo/jobs/run.py"],
-    name="pyspark-baseline",
-    task_id="pyspark-baseline-task",
+    arguments=["/airflo/jobs/segmentation.py"],
+    name="pyspark-segmentation",
+    task_id="pyspark-segmentation-task",
     dag=dag
 )
 
-pyspark_poc = KubernetesPodOperator(
-    image="atherin/pyspark:2.4.4",
-    cmds=["python"],
-    arguments=["/airflo/jobs/poc.py"],
-    name="pyspark-poc",
-    task_id="pyspark-poc-task",
-    dag=dag
-)
-
-pyspark_baseline.set_upstream(bash_baseline)
+pyspark_segmentation.set_upstream(bash_baseline)

@@ -28,6 +28,7 @@ __pycache__/
 
 # Project generated files #
 ###########################
+example.py
 run.sh
 base.yaml
 celerybeat-schedule
