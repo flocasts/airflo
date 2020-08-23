@@ -1,160 +1,109 @@
-AIRFLOW_VERSION ?= 1.8.0
-KUBECTL_VERSION ?= 1.6.1
-KUBE_AIRFLOW_VERSION ?= 0.10
+.IGNORE: clean clean-docker clean-helm clean-k8 clean-quick restart-quick
+.ONESHELL:
+.PHONY: clean restart start set
 
-REPOSITORY ?= mumoshu/kube-airflow
-TAG ?= $(AIRFLOW_VERSION)-$(KUBECTL_VERSION)-$(KUBE_AIRFLOW_VERSION)
-IMAGE ?= $(REPOSITORY):$(TAG)
-ALIAS ?= $(REPOSITORY):$(AIRFLOW_VERSION)-$(KUBECTL_VERSION)
+BASE_PATH = $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+AIRFLOW_DOCKER_PATH = $(BASE_PATH)/docker/puckel/docker-airflow/
+SPARK_DOCKER_PATH = $(BASE_PATH)/docker/atherin/docker-spark/
+AIRFLOW_HELM_PATH = $(BASE_PATH)/helm/official/charts/stable/airflow/
+AIRFLOW_DAGS_PATH = $(BASE_PATH)/dags/
+AIRFLOW_JOBS_PATH = $(BASE_PATH)/jobs/
+APPLICATION_NAME = airflow
+NAMESPACE = airflow
+ENV = dev
+LOCAL = True
+LOCAL_IMAGE = airflow-docker-local:1
+AIRFLOW_IMAGE = atherin/airflow:1.10.4
+SPARK_IMAGE = atherin/pyspark:2.4.4
 
-BUILD_ROOT ?= build/$(TAG)
-DOCKERFILE ?= $(BUILD_ROOT)/Dockerfile
-ROOTFS ?= $(BUILD_ROOT)/rootfs
-AIRFLOW_CONF ?= $(BUILD_ROOT)/config/airflow.cfg
-ENTRYPOINT_SH ?= $(BUILD_ROOT)/script/entrypoint.sh
-GIT_SYNC ?= $(BUILD_ROOT)/script/git-sync
-DAGS ?= $(BUILD_ROOT)/dags
-AIRFLOW_REQUIREMENTS ?= $(BUILD_ROOT)/requirements/airflow.txt
-DAGS_REQUIREMENTS ?= $(BUILD_ROOT)/requirements/dags.txt
-DOCKER_CACHE ?= docker-cache
-SAVED_IMAGE ?= $(DOCKER_CACHE)/image-$(AIRFLOW_VERSION)-$(KUBECTL_VERSION).tar
-AIRFLOW_HOME=/usr/local/airflow
+bash-docker-airflow:
+	docker run -v $(AIRFLOW_DAGS_PATH):/usr/dags/ -it --rm $(AIRFLOW_IMAGE) bash
 
-NAMESPACE ?= ns-andrew-tan
-HELM_APPLICATION_NAME ?= dev-airflo
-HELM_VALUES ?= ./values.yaml
-CHART_LOCATION ?= ./airflow
-CHART_PKG_LOCATION ?= stable/airflow
-# CHART_PKG_LOCATION ?= ./airflow-5.2.5.tgz
-EMBEDDED_DAGS_LOCATION ?= "./dags"
-REQUIREMENTS_TXT_LOCATION ?= "requirements/dags.txt"
-PASS_GEN ?= "$ (openssl rand -base64 13)"
+bash-docker-spark:
+	docker run  -v $(AIRFLOW_JOBS_PATH):/usr/jobs/ -it --rm $(SPARK_IMAGE) bash
 
-.PHONY: build clean
-
-clean:
-	rm -Rf build
-
-start:
-	helm upgrade -f $(HELM_VALUES) \
-				 --namespace=$(NAMESPACE) \
-	             --install \
-	             --debug \
-	             $(HELM_APPLICATION_NAME) \
-	             $(CHART_PKG_LOCATION)
-
-check:
-	helm install --dry-run \
-	             --namespace=$(NAMESPACE) \
-	             --debug \
-	             -f $(HELM_VALUES) \
-				 $(HELM_APPLICATION_NAME) \
-				 $(CHART_PKG_LOCATION)
-
-ls:
-	helm ls --namespace=$(NAMESPACE)
-
-stop: delete
-	helm delete $(HELM_APPLICATION_NAME)
-
-build: clean $(DOCKERFILE) $(ROOTFS) $(DAGS) $(AIRFLOW_CONF) $(ENTRYPOINT_SH) $(GIT_SYNC) $(AIRFLOW_REQUIREMENTS) $(DAGS_REQUIREMENTS)
-	cd $(BUILD_ROOT) && docker build -t $(IMAGE) . && docker tag $(IMAGE) $(ALIAS)
-
-publish:
-	docker push $(IMAGE) && docker push $(ALIAS)
-
-$(DOCKERFILE): $(BUILD_ROOT)
-	sed -e 's/%%KUBECTL_VERSION%%/'"$(KUBECTL_VERSION)"'/g;' \
-	    -e 's/%%AIRFLOW_VERSION%%/'"$(AIRFLOW_VERSION)"'/g;' \
-	    -e 's#%%EMBEDDED_DAGS_LOCATION%%#'"$(EMBEDDED_DAGS_LOCATION)"'#g;' \
-	    -e 's#%%REQUIREMENTS_TXT_LOCATION%%#'"$(REQUIREMENTS_TXT_LOCATION)"'#g;' \
-	    Dockerfile.template > $(DOCKERFILE)
-
-$(ROOTFS): $(BUILD_ROOT)
-	mkdir -p rootfs
-	cp -R rootfs $(ROOTFS)
-
-$(AIRFLOW_CONF): $(BUILD_ROOT)
-	mkdir -p $(shell dirname $(AIRFLOW_CONF))
-	cp config/airflow.cfg $(AIRFLOW_CONF)
-
-$(ENTRYPOINT_SH): $(BUILD_ROOT)
-	mkdir -p $(shell dirname $(ENTRYPOINT_SH))
-	cp script/entrypoint.sh $(ENTRYPOINT_SH)
-
-$(GIT_SYNC): $(BUILD_ROOT)
-	mkdir -p $(shell dirname $(GIT_SYNC))
-	cp script/git-sync $(GIT_SYNC)
-
-$(AIRFLOW_REQUIREMENTS): $(BUILD_ROOT)
-	mkdir -p $(shell dirname $(AIRFLOW_REQUIREMENTS))
-	cp requirements/airflow.txt $(AIRFLOW_REQUIREMENTS)
-
-$(DAGS_REQUIREMENTS): $(BUILD_ROOT)
-	mkdir -p $(shell dirname $(DAGS_REQUIREMENTS))
-	cp $(REQUIREMENTS_TXT_LOCATION) $(DAGS_REQUIREMENTS)
-
-$(DAGS): $(BUILD_ROOT)
-	mkdir -p $(shell dirname $(DAGS))
-	cp -R $(EMBEDDED_DAGS_LOCATION) $(DAGS)
-
-$(BUILD_ROOT):
-	mkdir -p $(BUILD_ROOT)
-
-travis-env:
-	travis env set DOCKER_EMAIL $(DOCKER_EMAIL)
-	travis env set DOCKER_USERNAME $(DOCKER_USERNAME)
-	travis env set DOCKER_PASSWORD $(DOCKER_PASSWORD)
-
-test:
-	@echo There are no tests available for now. Skipping
-
-save-docker-cache: $(DOCKER_CACHE)
-	docker save $(IMAGE) $(shell docker history -q $(IMAGE) | tail -n +2 | grep -v \<missing\> | tr '\n' ' ') > $(SAVED_IMAGE)
-	ls -lah $(DOCKER_CACHE)
-
-load-docker-cache: $(DOCKER_CACHE)
-	if [ -e $(SAVED_IMAGE) ]; then docker load < $(SAVED_IMAGE); fi
-
-$(DOCKER_CACHE):
-	mkdir -p $(DOCKER_CACHE)
-
-create: set-config
-	if ! kubectl get namespace $(NAMESPACE) >/dev/null 2>&1; then \
-	  kubectl create namespace $(NAMESPACE); \
-	fi
-	helm package $(CHART_LOCATION)
-
-ref:
-	@echo export RAND_PASS=$ openssl rand -base64 13
-	@echo kubectl exec $ WORKER -c airflow-worker -it -- /bin/bash
-	@echo kubectl create secret generic $(HELM_APPLICATION_NAME)-git --from-file=id_rsa=./id_rsa --from-file=known_hosts=./known_hosts --from-file=id_rsa.pub=./id_rsa.pub
-	@echo kubectl create secret generic $(HELM_APPLICATION_NAME)-postgres --from-literal=postgres-password='RAND_PASS'
-	@echo kubectl create secret generic $(HELM_APPLICATION_NAME)-postgresql --from-literal=postgresql-password='RAND_PASS'
-	@echo kubectl create secret generic $(HELM_APPLICATION_NAME)-redis --from-literal=redis-password='RAND_PASS'
-	@echo docker-machine start default
-	@echo docker-machine env
+bash-k8:
+	$(eval _POD=$(shell kubectl get pods --namespace $(NAMESPACE) -l "component=worker,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
+	kubectl exec $(_POD) -c airflow-worker -it -- /bin/bash
 
 browse-web:
-	minikube service web -n $(NAMESPACE)
+	minikube service airflow-web -n $(NAMESPACE)
 
-browse-flower:
-	minikube service flower -n $(NAMESPACE)
+browse-dash:
+	minikube dashboard
 
-delete:
+build-docker-airflow:
+	docker build --build-arg APP_ENV=${ENV} -t $(AIRFLOW_IMAGE) $(AIRFLOW_DOCKER_PATH) --no-cache
+
+build-docker-spark:
+	docker build --build-arg APP_ENV=${ENV} -t $(SPARK_IMAGE) $(SPARK_DOCKER_PATH) --no-cache
+
+clean: clean-quick
+	if [ "${LOCAL}" == "True" ]; then \
+		minikube delete; \
+	fi
+
+clean-k8:
 	kubectl delete pods,services --all --namespace=$(NAMESPACE)
-	# Alternative (last-resort)
-	# kubectl delete -f airflow.all.yaml --namespace=$(NAMESPACE) --all
+	kubectl delete secret airflow-aws
 
-get-all:
-	kubectl get all --namespace $(NAMESPACE)
-	# kubectl get all --all-namespaces
+clean-helm:
+	helm delete ${APPLICATION_NAME}
 
-get-config:
-	kubectl config get-contexts
+clean-docker:
+	$(eval _IMAGES=$(shell docker images -q -f dangling=true))
+	$(eval _VOLUMES=$(shell docker volume ls -qf dangling=true))
+	if [ -n "${_IMAGES}" ]; then \
+		docker rmi $(_IMAGES); \
+	fi
+	if [ -n "${_VOLUMES}" ]; then \
+		docker volume rm $(_VOLUMES); \
+	fi
+	docker container prune --filter "until=24h" --force
+	docker image prune --filter "until=24h" --force
 
-status:
-	helm status $(HELM_APPLICATION_NAME)
+clean-quick:
+	make clean-helm
+	make clean-k8
+	make clean-docker
+	if [ "${LOCAL}" == "True" ]; then \
+		minikube service list; \
+	fi
 
-set-config:
-	kubectl config set-context --current --namespace=$(NAMESPACE)
+debug-k8:
+	$(eval _POD=$(shell kubectl get pods --namespace $(NAMESPACE) -l "component=web,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
+	kubectl logs $(_POD) -p
+	# kubectl describe pod $(_POD)
+	# kubectl get all --namespace $(NAMESPACE) # --all-namespaces
+
+push-docker-airflow:
+	docker push $(AIRFLOW_IMAGE)
+
+push-docker-spark:
+	docker push $(SPARK_IMAGE)
+
+restart: clean-quick
+	sleep 10
+	make start
+
+start:
+	sh deploy.sh ${ENV} ${LOCAL}
+	sleep 580
+	make browse-web
+	make status-k8
+
+status-k8:
+	# kubectl config get-contexts
+	# kubectl config use-context minikube
+	# kubectl get services --watch -n airflow
+	kubectl get pods --watch -n airflow
+
+update-helm:
+	helm dependency update ${AIRFLOW_HELM_PATH}
+	helm dependency build ${AIRFLOW_HELM_PATH}
+
+update-docker-images:
+	make build-docker-airflow
+	make push-docker-airflow
+	make build-docker-spark
+	make push-docker-spark

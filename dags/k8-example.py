@@ -1,0 +1,77 @@
+from airflow import DAG
+from datetime import datetime, timedelta
+from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOperator
+from airflow.contrib.kubernetes.secret import Secret
+from airflow.contrib.kubernetes.volume import Volume
+from airflow.contrib.kubernetes.volume_mount import VolumeMount
+
+aws_access_key_id = Secret('env', 'AWS_ACCESS_KEY_ID', 'airflow-aws', 'AWS_ACCESS_KEY_ID')
+aws_secret_access_key = Secret('env', 'AWS_SECRET_ACCESS_KEY', 'airflow-aws', 'AWS_SECRET_ACCESS_KEY')
+aws_account = Secret('env', 'AWS_ACCOUNT', 'airflow-aws', 'AWS_ACCOUNT')
+
+volume_mount = VolumeMount(
+    'persist-disk',
+    mount_path='/airflo',
+    sub_path=None,
+    read_only=False
+)
+volume_config = {
+    'persistentVolumeClaim': {
+        'claimName': 'airflow'
+    }
+}
+volume = Volume(name='persist-disk', configs=volume_config)
+dag = DAG(
+    'k8-example-v1',
+    max_active_runs=1,
+    catchup=False,
+    schedule_interval=timedelta(days=365)
+)
+default_args = {
+    'owner': 'airflow',
+    'namespace': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2020, 1, 1),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 0,
+    'retry_delay': timedelta(minutes=5),
+    'image_pull_policy': 'Always',
+    'is_delete_operator_pod': True,
+    'do_xcom_push': False,
+    'volumes': [volume],
+    'volume_mounts': [volume_mount],
+    'labels': {"project": "cthulhu"},
+    'secrets': [aws_account, aws_access_key_id, aws_secret_access_key],
+}
+dag.default_args = default_args
+
+# BUG: Appears to be a limitation on number of arguments
+bash_baseline = KubernetesPodOperator(
+    image="atherin/pyspark:2.4.4",
+    cmds=["/bin/bash", "-c"],
+    arguments=["pwd; ls /airflo/jobs/;"],
+    name="bash_baseline",
+    task_id="bash-baseline-task",
+    dag=dag
+)
+
+pyspark_baseline = KubernetesPodOperator(
+    image="atherin/pyspark:2.4.4",
+    cmds=["python"],
+    arguments=["/airflo/jobs/run.py"],
+    name="pyspark-baseline",
+    task_id="pyspark-baseline-task",
+    dag=dag
+)
+
+pyspark_poc = KubernetesPodOperator(
+    image="atherin/pyspark:2.4.4",
+    cmds=["python"],
+    arguments=["/airflo/jobs/poc.py"],
+    name="pyspark-poc",
+    task_id="pyspark-poc-task",
+    dag=dag
+)
+
+pyspark_baseline.set_upstream(bash_baseline)
