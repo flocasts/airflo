@@ -126,8 +126,8 @@ airflow:
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.9
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: IfNotPresent
     AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
-    AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: airflow
-    AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: airflow-logs
+    AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: synchronised-dags
+    AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: synchronised-logs
     AIRFLOW__KUBERNETES__NAMESPACE: airflow
     AIRFLOW__KUBERNETES__DELETE_WORKER_PODS: True
     AIRFLOW__KUBERNETES__KUBE_CLIENT_REQUEST_ARGS: '{\"_request_timeout\":[60, 60]}'
@@ -186,15 +186,23 @@ airflow:
   #   - name: synchronised-dags
   #     mountPath: /dags
 
-  extraVolumeMounts: []
+  extraVolumeMounts: # []
   ## Additional volumeMounts to the main containers in the Scheduler, Worker and Web pods.
-  # - name: synchronised-dags
-  #   mountPath: /usr/local/airflow/dags
+  - name: synchronised-dags
+    mountPath: /usr/local/airflow/dags
+  - name: synchronised-jobs
+    mountPath: /usr/local/airflow/jobs
+  - name: synchronised-logs
+    mountPath: /usr/local/airflow/logs
 
-  extraVolumes: []
+  extraVolumes: # []
   ## Additional volumes for the Scheduler, Worker and Web pods.
-  # - name: synchronised-dags
-  #   emptyDir: {}
+  - name: synchronised-dags
+    emptyDir: {}
+  - name: synchronised-jobs
+    emptyDir: {}
+  - name: synchronised-logs
+    emptyDir: {}
 
   ## Run initdb when the scheduler starts.
   initdb: true
@@ -574,7 +582,7 @@ dags:
     url: https://github.com/flocasts/airflo.git
     ##
     ## branch name, tag or sha1 to reset to
-    ref: dev
+    ref: DATA-2379
     ## pre-created secret with key, key.pub and known_hosts file for private repos
     secret: airflow-git
     ## The host of the repo so for example if a github repo put github.com (Only need if using ssh not https git sync)

@@ -78,6 +78,7 @@ clean-quick:
 debug-k8:
 	$(eval _POD=$(shell kubectl get pods --namespace $(NAMESPACE) -l "component=web,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
 	kubectl logs $(_POD) -p
+	# lsof -i :8080
 	# kubectl describe pod $(_POD)
 	# kubectl get all --namespace $(NAMESPACE) # --all-namespaces
 
@@ -94,9 +95,7 @@ restart: clean-quick
 start:
 	sh deploy.sh ${ENV} ${LOCAL}
 	sleep 580
-	if [ "${LOCAL}" == "True" ]; then \
-		make browse-web; \
-	fi
+	make browse-web
 
 status-k8:
 	if [ "${LOCAL}" == "True" ]; then \
