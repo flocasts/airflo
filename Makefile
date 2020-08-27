@@ -1,4 +1,4 @@
-.IGNORE: clean clean-docker clean-helm clean-k8 clean-quick restart-quick
+.IGNORE: browse-web clean clean-docker clean-helm clean-k8 clean-quick restart-quick
 .ONESHELL:
 .PHONY: clean restart start set
 
@@ -14,8 +14,6 @@ ENV = dev
 # LOCAL = True
 LOCAL = False
 PROJECT_ID = engineering-sandbox-228018
-# AIRFLOW_IMAGE = atherin/$(ENV)-airflow:1.10.4
-# SPARK_IMAGE = atherin/$(ENV)-pyspark:2.4.4
 AIRFLOW_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-airflow:1.10.9
 SPARK_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-pyspark:2.4.4
 
@@ -30,7 +28,13 @@ bash-k8:
 	kubectl exec $(_POD) -c airflow-worker -it -- /bin/bash
 
 browse-web:
-	minikube service airflow-web -n $(NAMESPACE)
+	$(eval _POD=$(shell kubectl get pods --namespace airflow -l "component=web,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
+	if [ "${LOCAL}" == "True" ]; then \
+		minikube service airflow-web -n $(NAMESPACE); \
+	else \
+		kubectl port-forward --namespace airflow $(_POD) 8080:8080; \
+		open "http://127.0.0.1:8080"; \
+	fi
 
 browse-dash:
 	minikube dashboard
@@ -44,12 +48,12 @@ build-docker-spark:
 clean: clean-quick
 	if [ "${LOCAL}" == "True" ]; then \
 		minikube delete; \
-	else
-		kubectl delete namespace airflow
+	else \
+		kubectl delete namespace airflow; \
 	fi
 
 clean-k8:
-	kubectl delete namespace airflow
+	kubectl delete pods,services --all --namespace=$(NAMESPACE)
 
 clean-helm:
 	helm delete ${APPLICATION_NAME}
@@ -70,9 +74,6 @@ clean-quick:
 	make clean-helm
 	make clean-k8
 	make clean-docker
-	if [ "${LOCAL}" == "True" ]; then \
-		minikube service list; \
-	fi
 
 debug-k8:
 	$(eval _POD=$(shell kubectl get pods --namespace $(NAMESPACE) -l "component=web,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
@@ -93,14 +94,16 @@ restart: clean-quick
 start:
 	sh deploy.sh ${ENV} ${LOCAL}
 	sleep 580
-	make browse-web
+	if [ "${LOCAL}" == "True" ]; then \
+		make browse-web; \
+	fi
 
 status-k8:
-	# kubectl config get-contexts # troubleshoot contexts
-	# kubectl config use-context minikube
-	# kubectl get services --watch -n airflow
-	# kubectl describe pods
-	kubectl get pods --watch -n airflow
+	if [ "${LOCAL}" == "True" ]; then \
+		minikube service list; \
+	else \
+		kubectl get pods --watch -n airflow; \
+	fi
 
 update-helm:
 	helm dependency update ${AIRFLOW_HELM_PATH}

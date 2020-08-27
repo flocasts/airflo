@@ -20,11 +20,8 @@ SPARK_DOCKER_PATH=${BASE_PATH}/docker/atherin/docker-spark/
 AIRFLOW_HELM_PATH=${BASE_PATH}/helm/official/charts/stable/airflow/
 AIRFLOW_DAGS_PATH=${BASE_PATH}/dags/
 AIRFLOW_HELM_CHART=${BASE_PATH}/helm/official/charts/stable/airflow/values.yaml
-# AIRFLOW_HELM_CHART=${BASE_PATH}/helm/official/charts/airflow.yaml
 AIRFLOW_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-airflow:1.10.9
 SPARK_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-pyspark:2.4.4
-# AIRFLOW_IMAGE=atherin/${ENV}-airflow:1.10.9
-# SPARK_IMAGE=atherin/${ENV}-pyspark:2.4.4
 
 echo "Deploying ${APPLICATION_NAME}:${ENV}..."
 docker-machine env default
