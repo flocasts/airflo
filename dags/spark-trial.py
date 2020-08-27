@@ -13,7 +13,7 @@ volume_mount = VolumeMount(
     'persist-disk',
     mount_path='/airflo',
     sub_path=None,
-    read_only=False
+    read_only=True
 )
 volume_config = {
     'persistentVolumeClaim': {
@@ -31,6 +31,7 @@ default_args = {
     'owner': 'airflow',
     'namespace': 'airflow',
     'depends_on_past': False,
+    'get_logs': True,
     'start_date': datetime(2020, 1, 1),
     'email_on_failure': False,
     'email_on_retry': False,

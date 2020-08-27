@@ -8,6 +8,7 @@ downloads/
 eggs/
 env/
 ENV/
+examples/
 htmlcov/
 instance/
 lib/
