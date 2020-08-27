@@ -1,7 +1,7 @@
 airflow:
   image:
-     repository: atherin/airflow
-     tag: 1.10.4
+     repository: gcr.io/engineering-sandbox-228018/dev-airflow
+     tag: 1.10.9
   executor: Kubernetes
   service:
     type: LoadBalancer
@@ -22,8 +22,8 @@ airflow:
 
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: True
     AIRFLOW__WEBSERVER__LOG_FETCH_TIMEOUT_SEC: 30
-    AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: atherin/airflow
-    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.4
+    AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: gcr.io/engineering-sandbox-228018/dev-airflow
+    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.9
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: IfNotPresent
     AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
     AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: airflow

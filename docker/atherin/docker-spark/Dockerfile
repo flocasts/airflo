@@ -1,9 +1,10 @@
+# VERSION 2.4.4
 FROM python:3.7.6-slim
 MAINTAINER atherin
 ARG APP_ENV="dev"
 ENV APP_ENV=${APP_ENV}
-# ENV SNOWFLAKE_VERSION 4.29.0
-# ENV SCALA_VERSION 2.11.12
+ENV SNOWFLAKE_VERSION="4.29.0"
+ENV SCALA_VERSION="2.11.12"
 
 # Reset to root to run installation tasks
 USER 0

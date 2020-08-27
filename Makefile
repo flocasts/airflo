@@ -12,9 +12,12 @@ APPLICATION_NAME = airflow
 NAMESPACE = airflow
 ENV = dev
 LOCAL = True
-LOCAL_IMAGE = airflow-docker-local:1
-AIRFLOW_IMAGE = atherin/airflow:1.10.4
-SPARK_IMAGE = atherin/pyspark:2.4.4
+# LOCAL = False
+PROJECT_ID = engineering-sandbox-228018
+# AIRFLOW_IMAGE = atherin/$(ENV)-airflow:1.10.4
+# SPARK_IMAGE = atherin/$(ENV)-pyspark:2.4.4
+AIRFLOW_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-airflow:1.10.9
+SPARK_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-pyspark:2.4.4
 
 bash-docker-airflow:
 	docker run -v $(AIRFLOW_DAGS_PATH):/usr/dags/ -it --rm $(AIRFLOW_IMAGE) bash
@@ -90,12 +93,12 @@ start:
 	sh deploy.sh ${ENV} ${LOCAL}
 	sleep 580
 	make browse-web
-	make status-k8
 
 status-k8:
 	# kubectl config get-contexts
 	# kubectl config use-context minikube
 	# kubectl get services --watch -n airflow
+	# kubectl describe pods
 	kubectl get pods --watch -n airflow
 
 update-helm:
