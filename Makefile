@@ -11,8 +11,8 @@ AIRFLOW_JOBS_PATH = $(BASE_PATH)/jobs/
 APPLICATION_NAME = airflow
 NAMESPACE = airflow
 ENV = dev
-LOCAL = True
-# LOCAL = False
+# LOCAL = True
+LOCAL = False
 PROJECT_ID = engineering-sandbox-228018
 # AIRFLOW_IMAGE = atherin/$(ENV)-airflow:1.10.4
 # SPARK_IMAGE = atherin/$(ENV)-pyspark:2.4.4
@@ -95,7 +95,7 @@ start:
 	make browse-web
 
 status-k8:
-	# kubectl config get-contexts
+	# kubectl config get-contexts # troubleshoot contexts
 	# kubectl config use-context minikube
 	# kubectl get services --watch -n airflow
 	# kubectl describe pods
