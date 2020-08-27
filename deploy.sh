@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -eux
 
 ENV=$1
 LOCAL=$2
@@ -25,13 +25,13 @@ SPARK_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-pyspark:2.4.4
 # AIRFLOW_IMAGE=atherin/${ENV}-airflow:1.10.9
 # SPARK_IMAGE=atherin/${ENV}-pyspark:2.4.4
 
-echo "Deploying ${APPLICATION_NAME}:${ENV} at ${DOCKER_HOST}..."
+echo "Deploying ${APPLICATION_NAME}:${ENV}..."
 docker-machine env default
 eval $(docker-machine env default)
 
-echo "Building Dockerfiles..."
-docker build --build-arg APP_ENV=${ENV} -t ${AIRFLOW_IMAGE} ${AIRFLOW_DOCKER_PATH}
-docker build --build-arg APP_ENV=${ENV} -t ${SPARK_IMAGE} ${SPARK_DOCKER_PATH}
+# echo "Building Dockerfiles..."
+# docker build --build-arg APP_ENV=${ENV} -t ${AIRFLOW_IMAGE} ${AIRFLOW_DOCKER_PATH}
+# docker build --build-arg APP_ENV=${ENV} -t ${SPARK_IMAGE} ${SPARK_DOCKER_PATH}
 
 if [ "${ENV}" == "prod" ]; then
     BUCKET="flosports-data-warehouse-sources"
@@ -55,6 +55,7 @@ else
     CONTEXT="gke_${PROJECT_ID}_us-central1-a_sandbox"
     REGION="us-central1-c"
     GKE_NAME="sandbox"
+    KIND=deployment
 
     gcloud container clusters get-credentials ${GKE_NAME}
     if ! kubectl get namespace ${NAMESPACE} >/dev/null 2>&1; then
@@ -71,6 +72,10 @@ else
     if ! kubectl get clusterrolebinding spark-role --namespace=${NAMESPACE} >/dev/null 2>&1; then
         kubectl create clusterrolebinding spark-role --clusterrole=edit --serviceaccount=${NAMESPACE}:${APPLICATION_NAME} --namespace=${NAMESPACE}
     fi
+
+    kubectl annotate serviceaccount $APPLICATION_NAME meta.helm.sh/release-name=$APPLICATION_NAME --overwrite
+    kubectl annotate serviceaccount $APPLICATION_NAME meta.helm.sh/release-namespace=$NAMESPACE --overwrite
+    kubectl label serviceaccount $APPLICATION_NAME app.kubernetes.io/managed-by=Helm --overwrite
 fi
 
 echo "Generating secrets..."

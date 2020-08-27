@@ -13,7 +13,7 @@ volume_mount = VolumeMount(
     'persist-disk',
     mount_path='/airflo',
     sub_path=None,
-    read_only=False
+    read_only=True
 )
 volume_config = {
     'persistentVolumeClaim': {

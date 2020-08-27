@@ -500,7 +500,7 @@ persistence:
   ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
   ##   GKE, AWS & OpenStack)
   # storageClass: default
-  accessMode: ReadWriteOnce
+  accessMode: ReadOnlyMany
   ##
   ## Persistant storage size request
   size: 1Gi
@@ -527,7 +527,7 @@ logsPersistence:
   ## A configuration for shared log storage requires a `storageClass` that
   ## supports the `ReadWriteMany` accessMode, such as NFS or AWS EFS.
   # storageClass: default
-  accessMode: ReadWriteOnce
+  accessMode: ReadOnlyMany
   ##
   ## Persistant storage size request
   size: 1Gi
@@ -661,7 +661,7 @@ postgresql:
     ##
     ## Access modes:
     accessModes:
-      - ReadWriteOnce
+      - ReadOnlyMany
 
 
 ## Configuration values for the Redis dependency.
@@ -707,7 +707,7 @@ redis:
       ##
       ## Access mode:
       accessModes:
-      - ReadWriteOnce
+      - ReadOnlyMany
   ##
   ## Disable cluster management by default.
   cluster:

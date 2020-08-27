@@ -44,11 +44,12 @@ build-docker-spark:
 clean: clean-quick
 	if [ "${LOCAL}" == "True" ]; then \
 		minikube delete; \
+	else
+		kubectl delete namespace airflow
 	fi
 
 clean-k8:
-	kubectl delete pods,services --all --namespace=$(NAMESPACE)
-	kubectl delete secret airflow-aws
+	kubectl delete namespace airflow
 
 clean-helm:
 	helm delete ${APPLICATION_NAME}

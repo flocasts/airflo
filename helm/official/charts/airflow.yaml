@@ -35,13 +35,13 @@ airflow:
 persistence:
   enabled: true
   existingClaim: ''
-  accessMode: ReadWriteOnce
+  accessMode: ReadOnlyMany
   size: 1Gi
 
 logsPersistence:
   enabled: true
   existingClaim: ''
-  accessMode: ReadWriteOnce
+  accessMode: ReadOnlyMany
   size: 1Gi
 
 
