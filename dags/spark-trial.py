@@ -2,25 +2,25 @@ from airflow import DAG
 from datetime import datetime, timedelta
 from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOperator
 from airflow.contrib.kubernetes.secret import Secret
-from airflow.contrib.kubernetes.volume import Volume
-from airflow.contrib.kubernetes.volume_mount import VolumeMount
+# from airflow.contrib.kubernetes.volume import Volume
+# from airflow.contrib.kubernetes.volume_mount import VolumeMount
 
 aws_access_key_id = Secret('env', 'AWS_ACCESS_KEY_ID', 'airflow-aws', 'AWS_ACCESS_KEY_ID')
 aws_secret_access_key = Secret('env', 'AWS_SECRET_ACCESS_KEY', 'airflow-aws', 'AWS_SECRET_ACCESS_KEY')
 aws_account = Secret('env', 'AWS_ACCOUNT', 'airflow-aws', 'AWS_ACCOUNT')
 
-volume_mount = VolumeMount(
-    'persist-disk',
-    mount_path='/airflo',
-    sub_path=None,
-    read_only=True
-)
-volume_config = {
-    'persistentVolumeClaim': {
-        'claimName': 'synchronised-jobs'
-    }
-}
-volume = Volume(name='persist-disk', configs=volume_config)
+# volume_mount = VolumeMount(
+#     'persist-disk',
+#     mount_path='/airflo',
+#     sub_path=None,
+#     read_only=True
+# )
+# volume_config = {
+#     'persistentVolumeClaim': {
+#         'claimName': 'airflow'
+#     }
+# }
+# volume = Volume(name='persist-disk', configs=volume_config)
 dag = DAG(
     'spark-trial',
     max_active_runs=1,
@@ -40,8 +40,8 @@ default_args = {
     'image_pull_policy': 'Always',
     'is_delete_operator_pod': True,
     'do_xcom_push': False,
-    'volumes': [volume],
-    'volume_mounts': [volume_mount],
+    # 'volumes': [volume],
+    # 'volume_mounts': [volume_mount],
     'labels': {"project": "cthulhu"},
     'secrets': [aws_account, aws_access_key_id, aws_secret_access_key],
 }
@@ -51,9 +51,36 @@ dag.default_args = default_args
 bash_baseline = KubernetesPodOperator(
     image="atherin/pyspark:2.4.4",
     cmds=["/bin/bash", "-c"],
-    arguments=["pwd; ls /airflo/jobs/;"],
+    arguments=["pwd; ls /;"],
     name="bash_baseline",
     task_id="bash-baseline-task",
+    dag=dag
+)
+
+bash_baseline3 = KubernetesPodOperator(
+    image="atherin/pyspark:2.4.4",
+    cmds=["/bin/bash", "-c"],
+    arguments=["pwd; ls /usr/local/airflow/;"],
+    name="bash_baseline3",
+    task_id="bash-baseline3-task",
+    dag=dag
+)
+
+bash_baseline2 = KubernetesPodOperator(
+    image="atherin/pyspark:2.4.4",
+    cmds=["/bin/bash", "-c"],
+    arguments=["pwd; ls /usr/local/;"],
+    name="bash_baseline2",
+    task_id="bash-baseline2-task",
+    dag=dag
+)
+
+bash_baseline1 = KubernetesPodOperator(
+    image="atherin/pyspark:2.4.4",
+    cmds=["/bin/bash", "-c"],
+    arguments=["pwd; ls /usr/;"],
+    name="bash_baseline1",
+    task_id="bash-baseline1-task",
     dag=dag
 )
 
