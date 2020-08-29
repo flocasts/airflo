@@ -19,17 +19,10 @@ AIRFLOW_DOCKER_PATH=${BASE_PATH}/docker/puckel/docker-airflow/
 SPARK_DOCKER_PATH=${BASE_PATH}/docker/atherin/docker-spark/
 AIRFLOW_HELM_PATH=${BASE_PATH}/helm/official/charts/stable/airflow/
 AIRFLOW_DAGS_PATH=${BASE_PATH}/dags/
-AIRFLOW_HELM_CHART=${BASE_PATH}/helm/official/charts/stable/airflow/values.yaml
-AIRFLOW_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-airflow:1.10.9
-SPARK_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-pyspark:2.4.4
 
 echo "Deploying ${APPLICATION_NAME}:${ENV}..."
 docker-machine env default
 eval $(docker-machine env default)
-
-# echo "Building Dockerfiles..."
-# docker build --build-arg APP_ENV=${ENV} -t ${AIRFLOW_IMAGE} ${AIRFLOW_DOCKER_PATH}
-# docker build --build-arg APP_ENV=${ENV} -t ${SPARK_IMAGE} ${SPARK_DOCKER_PATH}
 
 if [ "${ENV}" == "prod" ]; then
     BUCKET="flosports-data-warehouse-sources"
@@ -38,6 +31,10 @@ else
 fi
 
 if [ "${LOCAL}" == "True" ]; then
+    AIRFLOW_HELM_CHART=${BASE_PATH}/helm/official/charts/airflow.yaml
+    AIRFLOW_IMAGE=atherin/airflow:1.10.9
+    SPARK_IMAGE=atherin/pyspark:2.4.4
+
     if ! minikube status >/dev/null 2>&1; then
         minikube start --vm-driver=virtualbox --memory=6096 --disk-size=20000mb --kubernetes-version v1.15.0
     fi
@@ -50,10 +47,14 @@ if [ "${LOCAL}" == "True" ]; then
     fi
     kubectl config set-context minikube --cluster=minikube --namespace=${NAMESPACE}
 else
-    CONTEXT="gke_${PROJECT_ID}_us-central1-a_sandbox"
     REGION="us-central1-c"
     GKE_NAME="sandbox"
-    KIND=deployment
+    CONTEXT="gke_${PROJECT_ID}_${REGION}_${GKE_NAME}"
+    # Unknown permission issue prevents GCR access via minikube. Using Dockerhub
+    # for the sake of expediency.
+    AIRFLOW_HELM_CHART=${BASE_PATH}/helm/official/charts/stable/airflow/values.yaml
+    AIRFLOW_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-airflow:1.10.9
+    SPARK_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-pyspark:2.4.4
 
     gcloud container clusters get-credentials ${GKE_NAME}
     if ! kubectl get namespace ${NAMESPACE} >/dev/null 2>&1; then
@@ -75,6 +76,10 @@ else
     kubectl annotate serviceaccount $APPLICATION_NAME meta.helm.sh/release-namespace=$NAMESPACE --overwrite
     kubectl label serviceaccount $APPLICATION_NAME app.kubernetes.io/managed-by=Helm --overwrite
 fi
+
+echo "Building Dockerfiles..."
+docker build --build-arg APP_ENV=${ENV} -t ${AIRFLOW_IMAGE} ${AIRFLOW_DOCKER_PATH}
+docker build --build-arg APP_ENV=${ENV} -t ${SPARK_IMAGE} ${SPARK_DOCKER_PATH}
 
 echo "Generating secrets..."
 if ! kubectl get secret airflow-aws --namespace ${NAMESPACE} >/dev/null 2>&1; then

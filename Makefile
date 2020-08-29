@@ -11,17 +11,26 @@ AIRFLOW_JOBS_PATH = $(BASE_PATH)/jobs/
 APPLICATION_NAME = airflow
 NAMESPACE = airflow
 ENV = dev
-# LOCAL = True
-LOCAL = False
+LOCAL = True
 PROJECT_ID = engineering-sandbox-228018
-AIRFLOW_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-airflow:1.10.9
-SPARK_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-pyspark:2.4.4
+DH_AIRFLOW_IMAGE = atherin/airflow:1.10.9
+DH_SPARK_IMAGE = atherin/pyspark:2.4.4
+GCR_AIRFLOW_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-airflow:1.10.9
+GCR_SPARK_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-pyspark:2.4.4
 
 bash-docker-airflow:
-	docker run -v $(AIRFLOW_DAGS_PATH):/usr/dags/ -it --rm $(AIRFLOW_IMAGE) bash
+	if [ "${LOCAL}" == "True" ]; then \
+		docker run -v $(AIRFLOW_DAGS_PATH):/usr/dags/ -it --rm $(DH_AIRFLOW_IMAGE) bash; \
+	else \
+		docker run -v $(AIRFLOW_DAGS_PATH):/usr/dags/ -it --rm $(GCR_AIRFLOW_IMAGE) bash; \
+	fi
 
 bash-docker-spark:
-	docker run  -v $(AIRFLOW_JOBS_PATH):/usr/jobs/ -it --rm $(SPARK_IMAGE) bash
+	if [ "${LOCAL}" == "True" ]; then \
+		docker run  -v $(AIRFLOW_JOBS_PATH):/usr/jobs/ -it --rm $(DH_SPARK_IMAGE) bash; \
+	else \
+		docker run  -v $(AIRFLOW_JOBS_PATH):/usr/jobs/ -it --rm $(GCR_SPARK_IMAGE) bash; \
+	fi
 
 bash-k8:
 	$(eval _POD=$(shell kubectl get pods --namespace $(NAMESPACE) -l "component=worker,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
@@ -29,21 +38,25 @@ bash-k8:
 
 browse-web:
 	$(eval _POD=$(shell kubectl get pods --namespace airflow -l "component=web,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
-	if [ "${LOCAL}" == "True" ]; then \
-		minikube service airflow-web -n $(NAMESPACE); \
-	else \
-		kubectl port-forward --namespace airflow $(_POD) 8080:8080; \
-		open "http://127.0.0.1:8080"; \
-	fi
+	open "http://127.0.0.1:8080"
+	kubectl port-forward --namespace airflow $(_POD) 8080:8080
 
 browse-dash:
 	minikube dashboard
 
 build-docker-airflow:
-	docker build --build-arg APP_ENV=${ENV} -t $(AIRFLOW_IMAGE) $(AIRFLOW_DOCKER_PATH) --no-cache
+	if [ "${LOCAL}" == "True" ]; then \
+		docker build --build-arg APP_ENV=${ENV} -t $(DH_AIRFLOW_IMAGE) $(AIRFLOW_DOCKER_PATH) --no-cache; \
+	else \
+		docker build --build-arg APP_ENV=${ENV} -t $(GCR_AIRFLOW_IMAGE) $(AIRFLOW_DOCKER_PATH) --no-cache; \
+	fi
 
 build-docker-spark:
-	docker build --build-arg APP_ENV=${ENV} -t $(SPARK_IMAGE) $(SPARK_DOCKER_PATH) --no-cache
+	if [ "${LOCAL}" == "True" ]; then \
+		docker build --build-arg APP_ENV=${ENV} -t $(DH_SPARK_IMAGE) $(SPARK_DOCKER_PATH) --no-cache; \
+	else \
+		docker build --build-arg APP_ENV=${ENV} -t $(GCR_SPARK_IMAGE) $(SPARK_DOCKER_PATH) --no-cache; \
+	fi
 
 clean: clean-quick
 	if [ "${LOCAL}" == "True" ]; then \
@@ -83,10 +96,18 @@ debug-k8:
 	# kubectl get all --namespace $(NAMESPACE) # --all-namespaces
 
 push-docker-airflow:
-	docker push $(AIRFLOW_IMAGE)
+	if [ "${LOCAL}" == "True" ]; then \
+		docker push $(DH_AIRFLOW_IMAGE); \
+	else \
+		docker push $(GCR_AIRFLOW_IMAGE); \
+	fi
 
 push-docker-spark:
-	docker push $(SPARK_IMAGE)
+	if [ "${LOCAL}" == "True" ]; then \
+		docker push $(DH_SPARK_IMAGE); \
+	else \
+		docker push $(GCR_SPARK_IMAGE); \
+	fi
 
 restart: clean-quick
 	sleep 10
@@ -94,7 +115,7 @@ restart: clean-quick
 
 start:
 	sh deploy.sh ${ENV} ${LOCAL}
-	sleep 580
+	sleep 520
 	make browse-web
 
 status-k8:

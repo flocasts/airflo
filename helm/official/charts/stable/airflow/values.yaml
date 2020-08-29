@@ -42,7 +42,8 @@ airflow:
     annotations: {}
     sessionAffinity: "None"
     sessionAffinityConfig: {}
-    type: ClusterIP
+    # type: ClusterIP
+    type: LoadBalancer
     externalPort: 8080
     nodePort:
       http:
@@ -126,8 +127,8 @@ airflow:
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.9
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: IfNotPresent
     AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
-    AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: synchronised-dags
-    AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: synchronised-logs
+    AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: airflow
+    AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: airflow-logs
     AIRFLOW__KUBERNETES__NAMESPACE: airflow
     AIRFLOW__KUBERNETES__DELETE_WORKER_PODS: True
     AIRFLOW__KUBERNETES__KUBE_CLIENT_REQUEST_ARGS: '{\"_request_timeout\":[60, 60]}'
@@ -186,23 +187,15 @@ airflow:
   #   - name: synchronised-dags
   #     mountPath: /dags
 
-  extraVolumeMounts: # []
+  extraVolumeMounts: []
   ## Additional volumeMounts to the main containers in the Scheduler, Worker and Web pods.
-  - name: synchronised-dags
-    mountPath: /usr/local/airflow/dags
-  - name: synchronised-jobs
-    mountPath: /usr/local/airflow/jobs
-  - name: synchronised-logs
-    mountPath: /usr/local/airflow/logs
+  # - name: synchronised-dags
+  #   mountPath: /usr/local/airflow/dags
 
-  extraVolumes: # []
+  extraVolumes: []
   ## Additional volumes for the Scheduler, Worker and Web pods.
-  - name: synchronised-dags
-    emptyDir: {}
-  - name: synchronised-jobs
-    emptyDir: {}
-  - name: synchronised-logs
-    emptyDir: {}
+  # - name: synchronised-dags
+  #   emptyDir: {}
 
   ## Run initdb when the scheduler starts.
   initdb: true
@@ -518,10 +511,11 @@ ingress:
 persistence:
   ##
   ## enable persistance storage
-  enabled: false
+  enabled: true
   ##
   ## Existing claim to use
   # existingClaim: nil
+  existingClaim: ''
   ## Existing claim's subPath to use, e.g. "dags" (optional)
   # subPath: ""
   ##
@@ -532,7 +526,7 @@ persistence:
   ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
   ##   GKE, AWS & OpenStack)
   # storageClass: default
-  accessMode: ReadWriteOnce
+  accessMode: ReadOnlyMany
   ##
   ## Persistant storage size request
   size: 1Gi
@@ -542,10 +536,11 @@ persistence:
 logsPersistence:
   ##
   ## enable persistance storage
-  enabled: false
+  enabled: true
   ##
   ## Existing claim to use
   # existingClaim: nil
+  existingClaim: ''
   ## Existing claim's subPath to use, e.g. "logs" (optional)
   # subPath: ""
   ##
@@ -622,7 +617,6 @@ dags:
     ## Path to add to `mountPath` where we clone/sync git to. Include leading /
     ## example: "/subdirWithDags"
     syncSubPath: ""
-
 
 ##
 ## Configure logs
