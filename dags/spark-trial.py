@@ -9,20 +9,18 @@ aws_access_key_id = Secret('env', 'AWS_ACCESS_KEY_ID', 'airflow-aws', 'AWS_ACCES
 aws_secret_access_key = Secret('env', 'AWS_SECRET_ACCESS_KEY', 'airflow-aws', 'AWS_SECRET_ACCESS_KEY')
 aws_account = Secret('env', 'AWS_ACCOUNT', 'airflow-aws', 'AWS_ACCOUNT')
 
-print(dir(VolumeMount))
-print(dir(Volume))
-# volume_mount = VolumeMount(
-#     'persist-disk',
-#     mount_path='/airflo',
-#     sub_path=None,
-#     read_only=True
-# )
-# volume_config = {
-#     'persistentVolumeClaim': {
-#         'claimName': 'airflow'
-#     }
-# }
-# volume = Volume(name='persist-disk', configs=volume_config)
+volume_mount = VolumeMount(
+    'persist-disk',
+    mount_path='/airflo',
+    sub_path=None,
+    read_only=True
+)
+volume_config = {
+    'persistentVolumeClaim': {
+        'claimName': 'airflow'
+    }
+}
+volume = Volume(name='persist-disk', configs=volume_config)
 dag = DAG(
     'spark-trial',
     max_active_runs=1,
@@ -71,7 +69,7 @@ bash_baseline2 = KubernetesPodOperator(
 bash_baseline1 = KubernetesPodOperator(
     image="atherin/pyspark:2.4.4",
     cmds=["/bin/bash", "-c"],
-    arguments=["pwd; ls ~;"],
+    arguments=["pwd; ls /usr/spark-2.4.4/;"],
     name="bash_baseline1",
     task_id="bash-baseline1-task",
     dag=dag
