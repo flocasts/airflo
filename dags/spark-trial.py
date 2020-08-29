@@ -40,8 +40,8 @@ default_args = {
     'image_pull_policy': 'Always',
     'is_delete_operator_pod': False,
     'do_xcom_push': False,
-    # 'volumes': [volume],
-    # 'volume_mounts': [volume_mount],
+    'volumes': [volume],
+    'volume_mounts': [volume_mount],
     'labels': {"project": "cthulhu"},
     'secrets': [aws_account, aws_access_key_id, aws_secret_access_key],
 }
