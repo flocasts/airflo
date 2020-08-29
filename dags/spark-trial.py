@@ -2,13 +2,15 @@ from airflow import DAG
 from datetime import datetime, timedelta
 from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOperator
 from airflow.contrib.kubernetes.secret import Secret
-# from airflow.contrib.kubernetes.volume import Volume
-# from airflow.contrib.kubernetes.volume_mount import VolumeMount
+from airflow.contrib.kubernetes.volume import Volume
+from airflow.contrib.kubernetes.volume_mount import VolumeMount
 
 aws_access_key_id = Secret('env', 'AWS_ACCESS_KEY_ID', 'airflow-aws', 'AWS_ACCESS_KEY_ID')
 aws_secret_access_key = Secret('env', 'AWS_SECRET_ACCESS_KEY', 'airflow-aws', 'AWS_SECRET_ACCESS_KEY')
 aws_account = Secret('env', 'AWS_ACCOUNT', 'airflow-aws', 'AWS_ACCOUNT')
 
+print(dir(VolumeMount))
+print(dir(Volume))
 # volume_mount = VolumeMount(
 #     'persist-disk',
 #     mount_path='/airflo',
@@ -69,7 +71,7 @@ bash_baseline2 = KubernetesPodOperator(
 bash_baseline1 = KubernetesPodOperator(
     image="atherin/pyspark:2.4.4",
     cmds=["/bin/bash", "-c"],
-    arguments=["pwd; ls /usr/;"],
+    arguments=["pwd; ls ~;"],
     name="bash_baseline1",
     task_id="bash-baseline1-task",
     dag=dag
