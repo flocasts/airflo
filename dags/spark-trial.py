@@ -38,7 +38,7 @@ default_args = {
     'retries': 0,
     'retry_delay': timedelta(minutes=5),
     'image_pull_policy': 'Always',
-    'is_delete_operator_pod': True,
+    'is_delete_operator_pod': False,
     'do_xcom_push': False,
     # 'volumes': [volume],
     # 'volume_mounts': [volume_mount],
@@ -54,15 +54,6 @@ bash_baseline = KubernetesPodOperator(
     arguments=["pwd; ls /;"],
     name="bash_baseline",
     task_id="bash-baseline-task",
-    dag=dag
-)
-
-bash_baseline3 = KubernetesPodOperator(
-    image="atherin/pyspark:2.4.4",
-    cmds=["/bin/bash", "-c"],
-    arguments=["pwd; ls /usr/local/airflow/;"],
-    name="bash_baseline3",
-    task_id="bash-baseline3-task",
     dag=dag
 )
 
