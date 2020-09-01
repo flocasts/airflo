@@ -77,6 +77,11 @@ else
     kubectl label serviceaccount $APPLICATION_NAME app.kubernetes.io/managed-by=Helm --overwrite
 fi
 
+if ! kubectl get pvc nfs-airflow-logs --namespace ${NAMESPACE} >/dev/null 2>&1; then
+    echo "Generating NFS..."
+    sh nfs/create_nfs_logs_and_dags.sh
+fi
+
 echo "Generating secrets..."
 if ! kubectl get secret airflow-aws --namespace ${NAMESPACE} >/dev/null 2>&1; then
     {

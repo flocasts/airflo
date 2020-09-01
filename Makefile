@@ -68,6 +68,8 @@ clean: clean-quick
 	fi
 
 clean-k8:
+	# kubectl get pv | tail -n+2 | awk '{print $1}' | xargs -I{} kubectl patch pv {} --type='merge' -p '{"metadata":{"finalizers": null}}'
+	# kubectl delete pv,pvc,pod --all --namespace=airflow
 	kubectl delete namespace $(NAMESPACE)
 
 clean-helm:

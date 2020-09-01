@@ -28,21 +28,21 @@ airflow:
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.9
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: IfNotPresent
     AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
-    AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: airflow
-    AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: airflow-logs
+    # AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: nfs-airflow-dags
+    # AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: nfs-airflow-logs
     AIRFLOW__KUBERNETES__DELETE_WORKER_PODS: True
     AIRFLOW__KUBERNETES__KUBE_CLIENT_REQUEST_ARGS: '{\"_request_timeout\":[60, 60]}'
 
 persistence:
-  enabled: false
-  existingClaim: ''
-  accessMode: ReadWriteOnce
+  enabled: true
+  existingClaim: nfs-airflow-dags
+  accessMode: ReadWriteMany
   size: 1Gi
 
 logsPersistence:
-  enabled: false
-  existingClaim: ''
-  accessMode: ReadWriteOnce
+  enabled: true
+  existingClaim: nfs-airflow-logs
+  accessMode: ReadWriteMany
   size: 1Gi
 
 dags:
