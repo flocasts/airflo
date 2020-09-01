@@ -13,9 +13,9 @@ NAMESPACE = airflow
 ENV = dev
 LOCAL = False
 PROJECT_ID = engineering-sandbox-228018
-DH_AIRFLOW_IMAGE = atherin/airflow:1.10.9
+DH_AIRFLOW_IMAGE = atherin/airflow:1.10.12
 DH_SPARK_IMAGE = atherin/pyspark:2.4.4
-GCR_AIRFLOW_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-airflow:1.10.9
+GCR_AIRFLOW_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-airflow:1.10.12
 GCR_SPARK_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-pyspark:2.4.4
 
 bash-docker-airflow:
@@ -32,7 +32,11 @@ bash-docker-spark:
 		docker run  -v $(AIRFLOW_JOBS_PATH):/usr/jobs/ -it --rm $(GCR_SPARK_IMAGE) bash; \
 	fi
 
-bash-k8:
+bash-k8-web:
+	$(eval _POD=$(shell kubectl get pods --namespace $(NAMESPACE) -l "component=web,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
+	kubectl exec $(_POD) -c airflow-web -it -- /bin/bash
+
+bash-k8-worker:
 	$(eval _POD=$(shell kubectl get pods --namespace $(NAMESPACE) -l "component=worker,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
 	kubectl exec $(_POD) -c airflow-worker -it -- /bin/bash
 
@@ -129,12 +133,17 @@ status-k8:
 		kubectl get pods --watch -n airflow; \
 	fi
 
+update:
+	helm upgrade ${APPLICATION_NAME} --install -f ${AIRFLOW_HELM_PATH}${ENV}-airflow.yaml ${AIRFLOW_HELM_PATH} --namespace ${NAMESPACE}
+
 update-helm:
 	helm dependency update ${AIRFLOW_HELM_PATH}
 	helm dependency build ${AIRFLOW_HELM_PATH}
 
-update-docker-images:
+update-docker-airflow:
 	make build-docker-airflow
 	make push-docker-airflow
+
+update-docker-spark:
 	make build-docker-spark
 	make push-docker-spark

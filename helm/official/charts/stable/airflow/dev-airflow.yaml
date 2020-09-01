@@ -1,7 +1,7 @@
 airflow:
   image:
      repository: gcr.io/engineering-sandbox-228018/dev-airflow
-     tag: 1.10.9
+     tag: 1.10.12
   executor: Kubernetes
   service:
     type: LoadBalancer
@@ -20,30 +20,43 @@ airflow:
     # Remote Logging
     AIRFLOW__CORE__REMOTE_LOGGING: False
 
+    # Enable 2.0 UI
+    # airflow create_user --lastname test --firstname test --username test --email test@mail.com --role Admin --password test
+    AIRFLOW__WEBSERVER__RBAC: True
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: True
     AIRFLOW__WEBSERVER__LOG_FETCH_TIMEOUT_SEC: 30
 
     AIRFLOW__KUBERNETES__NAMESPACE: airflow
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: gcr.io/engineering-sandbox-228018/dev-airflow
-    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.9
+    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.12
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: IfNotPresent
     AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
-    # AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: nfs-airflow-dags
-    # AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: nfs-airflow-logs
-    AIRFLOW__KUBERNETES__DELETE_WORKER_PODS: True
+    AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: nfs-airflow-dags
+    AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: nfs-airflow-logs
+    # import pdb; pdb.set_trace()
+    AIRFLOW__KUBERNETES__DELETE_WORKER_PODS: False
     AIRFLOW__KUBERNETES__KUBE_CLIENT_REQUEST_ARGS: '{\"_request_timeout\":[60, 60]}'
 
-persistence:
-  enabled: true
-  existingClaim: nfs-airflow-dags
-  accessMode: ReadWriteMany
-  size: 1Gi
+  extraVolumeMounts:
+  - name: synchronised-logs
+    mountPath: /opt/airflow/nfs/logs
+    # mountPath: /usr/local/airflow/logs
 
-logsPersistence:
-  enabled: true
-  existingClaim: nfs-airflow-logs
-  accessMode: ReadWriteMany
-  size: 1Gi
+  extraVolumes:
+  - name: synchronised-logs
+    emptyDir: {}
+
+# persistence:
+#   enabled: false
+#   existingClaim: nfs-airflow-dags
+#   accessMode: ReadWriteMany
+#   size: 1Gi
+#
+# logsPersistence:
+#   enabled: false
+#   existingClaim: nfs-airflow-logs
+#   accessMode: ReadWriteMany
+#   size: 1Gi
 
 dags:
   path: /usr/local/airflow/dags
@@ -71,12 +84,19 @@ dags:
     mountPath: "/dags"
     syncSubPath: ""
 
+logs:
+  path: /opt/airflow/nfs/logs
+  # path: /usr/local/airflow/logs
+
+flower:
+  enabled: false
+
 workers:
-  enabled: true
+  enabled: false
 
 postgresql:
   enabled: true
   size: 5Gi
 
 redis:
-  enabled: true
+  enabled: false
