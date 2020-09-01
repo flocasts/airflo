@@ -11,7 +11,7 @@ AIRFLOW_JOBS_PATH = $(BASE_PATH)/jobs/
 APPLICATION_NAME = airflow
 NAMESPACE = airflow
 ENV = dev
-LOCAL = True
+LOCAL = False
 PROJECT_ID = engineering-sandbox-228018
 DH_AIRFLOW_IMAGE = atherin/airflow:1.10.9
 DH_SPARK_IMAGE = atherin/pyspark:2.4.4
@@ -42,7 +42,11 @@ browse-web:
 	kubectl port-forward --namespace airflow $(_POD) 8080:8080
 
 browse-dash:
-	minikube dashboard
+	if [ "${LOCAL}" == "True" ]; then \
+		minikube dashboard; \
+	else \
+		open "https://console.cloud.google.com/kubernetes/workload"; \
+	fi
 
 build-docker-airflow:
 	if [ "${LOCAL}" == "True" ]; then \
@@ -61,12 +65,10 @@ build-docker-spark:
 clean: clean-quick
 	if [ "${LOCAL}" == "True" ]; then \
 		minikube delete; \
-	else \
-		kubectl delete namespace airflow; \
 	fi
 
 clean-k8:
-	kubectl delete pods,services --all --namespace=$(NAMESPACE)
+	kubectl delete namespace $(NAMESPACE)
 
 clean-helm:
 	helm delete ${APPLICATION_NAME}

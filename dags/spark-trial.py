@@ -17,7 +17,7 @@ volume_mount = VolumeMount(
 )
 volume_config = {
     'persistentVolumeClaim': {
-        'claimName': 'airflow'
+        'claimName': 'airflow-dags'
     }
 }
 volume = Volume(name='persist-disk', configs=volume_config)
@@ -38,6 +38,7 @@ default_args = {
     'retries': 0,
     'retry_delay': timedelta(minutes=5),
     'image_pull_policy': 'Always',
+    # import pdb; pdb.set_trace()
     'is_delete_operator_pod': False,
     'do_xcom_push': False,
     'volumes': [volume],
@@ -54,6 +55,15 @@ bash_baseline = KubernetesPodOperator(
     arguments=["pwd; ls /;"],
     name="bash_baseline",
     task_id="bash-baseline-task",
+    dag=dag
+)
+
+bash_baseline1 = KubernetesPodOperator(
+    image="atherin/pyspark:2.4.4",
+    cmds=["/bin/bash", "-c"],
+    arguments=["pwd; ls /opt/;"],
+    name="bash_baseline1",
+    task_id="bash-baseline1-task",
     dag=dag
 )
 

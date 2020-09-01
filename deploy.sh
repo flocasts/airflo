@@ -19,6 +19,8 @@ AIRFLOW_DOCKER_PATH=${BASE_PATH}/docker/puckel/docker-airflow/
 SPARK_DOCKER_PATH=${BASE_PATH}/docker/atherin/docker-spark/
 AIRFLOW_HELM_PATH=${BASE_PATH}/helm/official/charts/stable/airflow/
 AIRFLOW_DAGS_PATH=${BASE_PATH}/dags/
+# NFS_HELM_PATH=${BASE_PATH}/helm/official/charts/stable/nfs-server-provisioner/
+# NFS_HELM_CHART=${NFS_HELM_PATH}values.yaml
 
 echo "Deploying ${APPLICATION_NAME}:${ENV}..."
 docker-machine env default
@@ -31,7 +33,7 @@ else
 fi
 
 if [ "${LOCAL}" == "True" ]; then
-    AIRFLOW_HELM_CHART=${BASE_PATH}/helm/official/charts/airflow.yaml
+    AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}local-airflow.yaml
     AIRFLOW_IMAGE=atherin/airflow:1.10.9
     SPARK_IMAGE=atherin/pyspark:2.4.4
 
@@ -50,9 +52,7 @@ else
     REGION="us-central1-c"
     GKE_NAME="sandbox"
     CONTEXT="gke_${PROJECT_ID}_${REGION}_${GKE_NAME}"
-    # Unknown permission issue prevents GCR access via minikube. Using Dockerhub
-    # for the sake of expediency.
-    AIRFLOW_HELM_CHART=${BASE_PATH}/helm/official/charts/stable/airflow/values.yaml
+    AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}${ENV}-airflow.yaml
     AIRFLOW_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-airflow:1.10.9
     SPARK_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-pyspark:2.4.4
 
@@ -76,10 +76,6 @@ else
     kubectl annotate serviceaccount $APPLICATION_NAME meta.helm.sh/release-namespace=$NAMESPACE --overwrite
     kubectl label serviceaccount $APPLICATION_NAME app.kubernetes.io/managed-by=Helm --overwrite
 fi
-
-echo "Building Dockerfiles..."
-docker build --build-arg APP_ENV=${ENV} -t ${AIRFLOW_IMAGE} ${AIRFLOW_DOCKER_PATH}
-docker build --build-arg APP_ENV=${ENV} -t ${SPARK_IMAGE} ${SPARK_DOCKER_PATH}
 
 echo "Generating secrets..."
 if ! kubectl get secret airflow-aws --namespace ${NAMESPACE} >/dev/null 2>&1; then
@@ -120,6 +116,7 @@ fi
 
 if ! helm status ${APPLICATION_NAME} --namespace ${NAMESPACE}>/dev/null 2>&1; then
     echo "Configuring helm..."
+    # helm install nfs-server -f ${NFS_HELM_CHART} ${NFS_HELM_PATH} --namespace ${NAMESPACE}
     helm install ${APPLICATION_NAME} -f ${AIRFLOW_HELM_CHART} ${AIRFLOW_HELM_PATH} --namespace ${NAMESPACE}
 fi
 

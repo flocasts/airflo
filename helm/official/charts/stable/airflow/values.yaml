@@ -42,15 +42,14 @@ airflow:
     annotations: {}
     sessionAffinity: "None"
     sessionAffinityConfig: {}
-    # type: ClusterIP
-    type: LoadBalancer
+    type: ClusterIP
     externalPort: 8080
     nodePort:
       http:
   ##
   ## The executor to use.
   ##
-  executor: Kubernetes
+  executor: Celery
   ##
   ## set the max number of retries during container initialization
   initRetryLoop:
@@ -65,10 +64,10 @@ airflow:
   image:
     ##
     ## docker-airflow image
-    repository: gcr.io/engineering-sandbox-228018/dev-airflow
+    repository: puckel/docker-airflow
     ##
     ## image tag
-    tag: 1.10.9
+    tag: 1.10.4
     ##
     ## Image pull policy
     ## values: Always or IfNotPresent
@@ -107,31 +106,7 @@ airflow:
   ##   config:
   ##     AIRFLOW__CORE__EXPOSE_CONFIG: "True"
   ##     HTTP_PROXY: "http://proxy.mycompany.com:123"
-  config:
-    AIRFLOW__CORE__EXECUTOR: KubernetesExecutor
-    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: True
-    AIRFLOW__SCHEDULER__CATCHUP_BY_DEFAULT: False
-    AIRFLOW__CORE__LOGGING_LEVEL: INFO
-    AIRFLOW__CORE__FERNET_KEY: -VPrAtf3PunVqdBKdURvTnbn0VYOJfBqivkz9N3K2qo=
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:airflow@airflow-postgresql:5432/airflow
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://postgres:airflow@airflow-postgresql:5432/airflow
-    AIRFLOW__CELERY__BROKER_URL: redis://:airflow@airflow-redis-master:6379/0
-    AIRFLOW__CORE__LOAD_EXAMPLES: False
-
-    # Remote Logging
-    AIRFLOW__CORE__REMOTE_LOGGING: False
-
-    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: True
-    AIRFLOW__WEBSERVER__LOG_FETCH_TIMEOUT_SEC: 30
-    AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: gcr.io/engineering-sandbox-228018/dev-airflow
-    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.9
-    AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: IfNotPresent
-    AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
-    AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: airflow
-    AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: airflow-logs
-    AIRFLOW__KUBERNETES__NAMESPACE: airflow
-    AIRFLOW__KUBERNETES__DELETE_WORKER_PODS: True
-    AIRFLOW__KUBERNETES__KUBE_CLIENT_REQUEST_ARGS: '{\"_request_timeout\":[60, 60]}'
+  config: {}
   ##
   ## Configure pod disruption budget for the scheduler
   podDisruptionBudgetEnabled: true
@@ -511,11 +486,10 @@ ingress:
 persistence:
   ##
   ## enable persistance storage
-  enabled: true
+  enabled: false
   ##
   ## Existing claim to use
   # existingClaim: nil
-  existingClaim: ''
   ## Existing claim's subPath to use, e.g. "dags" (optional)
   # subPath: ""
   ##
@@ -526,7 +500,7 @@ persistence:
   ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
   ##   GKE, AWS & OpenStack)
   # storageClass: default
-  accessMode: ReadOnlyMany
+  accessMode: ReadWriteOnce
   ##
   ## Persistant storage size request
   size: 1Gi
@@ -536,11 +510,10 @@ persistence:
 logsPersistence:
   ##
   ## enable persistance storage
-  enabled: true
+  enabled: false
   ##
   ## Existing claim to use
   # existingClaim: nil
-  existingClaim: ''
   ## Existing claim's subPath to use, e.g. "logs" (optional)
   # subPath: ""
   ##
@@ -577,7 +550,7 @@ dags:
     url: https://github.com/flocasts/airflo.git
     ##
     ## branch name, tag or sha1 to reset to
-    ref: DATA-2379
+    ref: dev
     ## pre-created secret with key, key.pub and known_hosts file for private repos
     secret: airflow-git
     ## The host of the repo so for example if a github repo put github.com (Only need if using ssh not https git sync)
