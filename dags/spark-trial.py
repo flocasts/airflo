@@ -9,18 +9,18 @@ aws_access_key_id = Secret('env', 'AWS_ACCESS_KEY_ID', 'airflow-aws', 'AWS_ACCES
 aws_secret_access_key = Secret('env', 'AWS_SECRET_ACCESS_KEY', 'airflow-aws', 'AWS_SECRET_ACCESS_KEY')
 aws_account = Secret('env', 'AWS_ACCOUNT', 'airflow-aws', 'AWS_ACCOUNT')
 
-volume_mount = VolumeMount(
-    'persist-disk',
-    mount_path='/airflo',
-    sub_path=None,
-    read_only=True
-)
-volume_config = {
-    'persistentVolumeClaim': {
-        'claimName': 'nfs-airflow-dags'
-    }
-}
-volume = Volume(name='persist-disk', configs=volume_config)
+# volume_mount = VolumeMount(
+#     'persist-disk',
+#     mount_path='/airflo',
+#     sub_path=None,
+#     read_only=True
+# )
+# volume_config = {
+#     'persistentVolumeClaim': {
+#         'claimName': 'nfs-airflow-dags'
+#     }
+# }
+# volume = Volume(name='persist-disk', configs=volume_config)
 dag = DAG(
     'spark-trial',
     max_active_runs=1,
@@ -41,8 +41,8 @@ default_args = {
     # import pdb; pdb.set_trace()
     'is_delete_operator_pod': False,
     'do_xcom_push': False,
-    'volumes': [volume],
-    'volume_mounts': [volume_mount],
+    # 'volumes': [volume],
+    # 'volume_mounts': [volume_mount],
     'labels': {"project": "cthulhu"},
     'secrets': [aws_account, aws_access_key_id, aws_secret_access_key],
 }

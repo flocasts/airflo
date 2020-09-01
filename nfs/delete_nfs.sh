@@ -25,9 +25,6 @@ echo "NFS server IP: ${NFS_SERVER_IP}"
 sed -e "s/NFS_SERVER_POD_IP_ADDRESS/${NFS_SERVER_IP}/" ${DIR}/volumes_logs.yaml > ${DIR}/volumes_logs_complete.yaml
 sed -e "s/NFS_SERVER_POD_IP_ADDRESS/${NFS_SERVER_IP}/" ${DIR}/volumes_dags.yaml > ${DIR}/volumes_dags_complete.yaml
 
-kubectl delete -f ${DIR}/volumes_logs_complete.yaml --namespace=${NAMESPACE}
-rm ${DIR}/volumes_logs_complete.yaml
-
-kubectl delete -f ${DIR}/volumes_dags_complete.yaml --namespace=${NAMESPACE}
-rm ${DIR}/volumes_dags_complete.yaml
-kubectl delete -f ${DIR}/nfs_server.yaml --namespace=${NAMESPACE}
+kubectl delete -f ${DIR}/volumes_logs_complete.yaml --namespace=${NAMESPACE} || true
+kubectl delete -f ${DIR}/volumes_dags_complete.yaml --namespace=${NAMESPACE} || true
+kubectl delete -f ${DIR}/nfs_server.yaml --namespace=${NAMESPACE} || true
