@@ -17,7 +17,7 @@ volume_mount = VolumeMount(
 )
 volume_config = {
     'persistentVolumeClaim': {
-        'claimName': 'airflow'
+        'claimName': 'airflow-dags'
     }
 }
 volume = Volume(name='persist-disk', configs=volume_config)
