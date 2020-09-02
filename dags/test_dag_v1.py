@@ -49,6 +49,13 @@ default_args = {
 }
 dag = DAG(DAG_NAME, default_args=default_args)
 
+bash_baseline = KubernetesPodOperator(
+    image=spark_image,
+    cmds=["/bin/bash", "-c"],
+    arguments=["pwd; ls /;"],
+    task_id="bash_baseline",
+    dag=dag
+)
 run_this_1 = DummyOperator(task_id='run_this_1', dag=dag)
 run_this_2 = DummyOperator(task_id='run_this_2', dag=dag)
 run_this_2.set_upstream(run_this_1)
