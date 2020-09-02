@@ -10,7 +10,7 @@ from datetime import timedelta
 aws_access_key_id = Secret('env', 'AWS_ACCESS_KEY_ID', 'airflow-aws', 'AWS_ACCESS_KEY_ID')
 aws_secret_access_key = Secret('env', 'AWS_SECRET_ACCESS_KEY', 'airflow-aws', 'AWS_SECRET_ACCESS_KEY')
 aws_account = Secret('env', 'AWS_ACCOUNT', 'airflow-aws', 'AWS_ACCOUNT')
-spark_image = 'gcr.io/engineering-sandbox-228018/dev-airflow:1.10.12'
+spark_image =
 
 volume_mount = VolumeMount(
     'persist-disk',
@@ -49,9 +49,7 @@ default_args = {
 dag = DAG('test_dag_v1', default_args=default_args)
 
 bash_baseline = KubernetesPodOperator(
-    image=spark_image,
-    # cmds=["/bin/bash", "-c"],
-    # arguments=["pwd; ls /;"],
+    image='gcr.io/engineering-sandbox-228018/dev-airflow:1.10.12',
     task_id="bash_baseline",
     dag=dag
 )
