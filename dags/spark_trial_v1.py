@@ -8,6 +8,7 @@ from airflow.contrib.kubernetes.volume_mount import VolumeMount
 aws_access_key_id = Secret('env', 'AWS_ACCESS_KEY_ID', 'airflow-aws', 'AWS_ACCESS_KEY_ID')
 aws_secret_access_key = Secret('env', 'AWS_SECRET_ACCESS_KEY', 'airflow-aws', 'AWS_SECRET_ACCESS_KEY')
 aws_account = Secret('env', 'AWS_ACCOUNT', 'airflow-aws', 'AWS_ACCOUNT')
+spark_image =
 
 volume_mount = VolumeMount(
     'persist-disk',
@@ -41,7 +42,7 @@ default_args = {
     'secrets': [aws_account, aws_access_key_id, aws_secret_access_key]
 }
 dag = DAG(
-    'spark_trial',
+    'spark_trial_v1',
     max_active_runs=1,
     catchup=False,
     schedule_interval=timedelta(days=365),
@@ -50,7 +51,7 @@ dag = DAG(
 
 # BUG: Appears to be a limitation on number of arguments
 bash_baseline = KubernetesPodOperator(
-    image="atherin/pyspark:2.4.4",
+    image=spark_image,
     cmds=["/bin/bash", "-c"],
     arguments=["pwd; ls /;"],
     name="bash_baseline",
@@ -59,7 +60,7 @@ bash_baseline = KubernetesPodOperator(
 )
 
 pyspark_segmentation = KubernetesPodOperator(
-    image="atherin/pyspark:2.4.4",
+    image=spark_image,
     cmds=["python"],
     arguments=["/airflo/jobs/segmentation.py"],
     name="pyspark-segmentation",
