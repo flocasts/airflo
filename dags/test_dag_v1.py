@@ -51,7 +51,7 @@ dag = DAG(DAG_NAME, default_args=default_args)
 
 bash_baseline = KubernetesPodOperator(
     image=spark_image,
-    cmds=["/bin/bash", "-c"],
+    # cmds=["/bin/bash", "-c"],
     # arguments=["pwd; ls /;"],
     task_id="bash_baseline",
     dag=dag
