@@ -29,10 +29,12 @@ DAG_NAME = 'test_dag_v1'
 default_args = {
     'owner': 'airflow',
     'namespace': 'airflow',
+    'catchup': False,
     'depends_on_past': False,
-    'get_logs': True,
     'email_on_failure': False,
     'email_on_retry': False,
+    'get_logs': True,
+    'max_active_runs': 1,
     'retries': 0,
     'retry_delay': timedelta(minutes=5),
     'image_pull_policy': 'Always',
@@ -42,9 +44,10 @@ default_args = {
     'volume_mounts': [volume_mount],
     'labels': {"project": "cthulhu"},
     'secrets': [aws_account, aws_access_key_id, aws_secret_access_key],
+    'schedule_interval': '0 0 1 * *',
     'start_date': days_ago(1)
 }
-dag = DAG(DAG_NAME, schedule_interval='0 0 1 * *', default_args=default_args)
+dag = DAG(DAG_NAME, default_args=default_args)
 
 run_this_1 = DummyOperator(task_id='run_this_1', dag=dag)
 run_this_2 = DummyOperator(task_id='run_this_2', dag=dag)
