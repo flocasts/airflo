@@ -44,7 +44,7 @@ default_args = {
     'secrets': [aws_account, aws_access_key_id, aws_secret_access_key],
     'start_date': days_ago(1)
 }
-dag = DAG(DAG_NAME, schedule_interval='*/10 * * * *', default_args=default_args)
+dag = DAG(DAG_NAME, schedule_interval='0 0 1 * *', default_args=default_args)
 
 run_this_1 = DummyOperator(task_id='run_this_1', dag=dag)
 run_this_2 = DummyOperator(task_id='run_this_2', dag=dag)
