@@ -24,7 +24,6 @@ volume_config = {
     }
 }
 volume = Volume(name='persist-disk', configs=volume_config)
-DAG_NAME = 'test_dag_v1'
 
 default_args = {
     'owner': 'airflow',
@@ -47,7 +46,7 @@ default_args = {
     'schedule_interval': '0 0 1 * *',
     'start_date': days_ago(1)
 }
-dag = DAG(DAG_NAME, default_args=default_args)
+dag = DAG('test_dag_v1', default_args=default_args)
 
 bash_baseline = KubernetesPodOperator(
     image=spark_image,
