@@ -1,4 +1,4 @@
-from airflow import DAG
+from airflow.models.dag import DAG
 from datetime import datetime, timedelta
 from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOperator
 from airflow.contrib.kubernetes.secret import Secret
@@ -21,12 +21,7 @@ volume_config = {
     }
 }
 volume = Volume(name='persist-disk', configs=volume_config)
-dag = DAG(
-    'spark-trial',
-    max_active_runs=1,
-    catchup=False,
-    schedule_interval=timedelta(days=365)
-)
+
 default_args = {
     'owner': 'airflow',
     'namespace': 'airflow',
@@ -43,9 +38,15 @@ default_args = {
     'volumes': [volume],
     'volume_mounts': [volume_mount],
     'labels': {"project": "cthulhu"},
-    'secrets': [aws_account, aws_access_key_id, aws_secret_access_key],
+    'secrets': [aws_account, aws_access_key_id, aws_secret_access_key]
 }
-dag.default_args = default_args
+dag = DAG(
+    'spark_trial',
+    max_active_runs=1,
+    catchup=False,
+    schedule_interval=timedelta(days=365),
+    default_args=default_args
+)
 
 # BUG: Appears to be a limitation on number of arguments
 bash_baseline = KubernetesPodOperator(
