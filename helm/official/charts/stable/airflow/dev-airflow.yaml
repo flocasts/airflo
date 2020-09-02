@@ -14,7 +14,7 @@ airflow:
     AIRFLOW__CORE__LOGGING_LEVEL: INFO
     AIRFLOW__CORE__FERNET_KEY: -VPrAtf3PunVqdBKdURvTnbn0VYOJfBqivkz9N3K2qo=
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:airflow@airflow-postgresql:5432/airflow
-    AIRFLOW__CORE__LOAD_EXAMPLES: True
+    AIRFLOW__CORE__LOAD_EXAMPLES: False
 
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://postgres:airflow@airflow-postgresql:5432/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:airflow@airflow-redis-master:6379/0
