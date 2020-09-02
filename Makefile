@@ -13,9 +13,9 @@ NAMESPACE = airflow
 ENV = dev
 LOCAL = False
 PROJECT_ID = engineering-sandbox-228018
-DH_AIRFLOW_IMAGE = atherin/airflow:1.10.9
+DH_AIRFLOW_IMAGE = atherin/airflow:1.10.12
 DH_SPARK_IMAGE = atherin/pyspark:2.4.4
-GCR_AIRFLOW_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-airflow:1.10.9
+GCR_AIRFLOW_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-airflow:1.10.12
 GCR_SPARK_IMAGE = gcr.io/$(PROJECT_ID)/$(ENV)-pyspark:2.4.4
 
 bash-docker-airflow:
