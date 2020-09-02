@@ -63,6 +63,7 @@ resource.yml
 .scrapy
 .spyderproject
 .webassets-cache
+nfs/*complete.yaml
 
 # Logs #
 ########

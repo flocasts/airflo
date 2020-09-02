@@ -21,7 +21,8 @@ airflow:
     AIRFLOW__CORE__REMOTE_LOGGING: False
 
     # Enable 2.0 UI
-    # airflow create_user --lastname test --firstname test --username test --email test@mail.com --role Admin --password test
+    # Temporary dummy login
+    # airflow create_user --lastname West --firstname Adam --username caped --email test@mail.com --role Admin --password crusader
     AIRFLOW__WEBSERVER__RBAC: True
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: True
     AIRFLOW__WEBSERVER__LOG_FETCH_TIMEOUT_SEC: 30
@@ -38,12 +39,11 @@ airflow:
     AIRFLOW__KUBERNETES__KUBE_CLIENT_REQUEST_ARGS: '{\"_request_timeout\":[60, 60]}'
 
   extraVolumeMounts:
-  - name: synchronised-logs
-    mountPath: /opt/airflow/nfs/logs
-    # mountPath: /usr/local/airflow/logs
+  - name: synchronised-data
+    mountPath: /opt/airflow/nfs
 
   extraVolumes:
-  - name: synchronised-logs
+  - name: synchronised-data
     emptyDir: {}
 
 # persistence:
@@ -59,7 +59,8 @@ airflow:
 #   size: 1Gi
 
 dags:
-  path: /usr/local/airflow/dags
+  path: /opt/airflow/nfs/dags
+  # path: /usr/local/airflow/dags
   doNotPickle: false
   git:
     url: https://github.com/flocasts/airflo.git
