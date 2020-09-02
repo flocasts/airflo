@@ -10,18 +10,18 @@ aws_secret_access_key = Secret('env', 'AWS_SECRET_ACCESS_KEY', 'airflow-aws', 'A
 aws_account = Secret('env', 'AWS_ACCOUNT', 'airflow-aws', 'AWS_ACCOUNT')
 spark_image = 'gcr.io/engineering-sandbox-228018/dev-airflow:1.10.12'
 
-volume_mount = VolumeMount(
-    'persist-disk',
-    mount_path='/airflo',
-    sub_path=None,
-    read_only=True
-)
-volume_config = {
-    'persistentVolumeClaim': {
-        'claimName': 'nfs-airflow-dags'
-    }
-}
-volume = Volume(name='persist-disk', configs=volume_config)
+# volume_mount = VolumeMount(
+#     'persist-disk',
+#     mount_path='/airflo',
+#     sub_path=None,
+#     read_only=True
+# )
+# volume_config = {
+#     'persistentVolumeClaim': {
+#         'claimName': 'nfs-airflow-dags'
+#     }
+# }
+# volume = Volume(name='persist-disk', configs=volume_config)
 
 default_args = {
     'owner': 'airflow',
@@ -36,8 +36,8 @@ default_args = {
     'image_pull_policy': 'Always',
     'is_delete_operator_pod': False,
     'do_xcom_push': False,
-    'volumes': [volume],
-    'volume_mounts': [volume_mount],
+    # 'volumes': [volume],
+    # 'volume_mounts': [volume_mount],
     'labels': {"project": "cthulhu"},
     'secrets': [aws_account, aws_access_key_id, aws_secret_access_key]
 }
