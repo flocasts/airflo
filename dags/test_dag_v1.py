@@ -5,6 +5,7 @@ from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOpera
 from airflow.contrib.kubernetes.secret import Secret
 from airflow.contrib.kubernetes.volume import Volume
 from airflow.contrib.kubernetes.volume_mount import VolumeMount
+from datetime import timedelta
 
 aws_access_key_id = Secret('env', 'AWS_ACCESS_KEY_ID', 'airflow-aws', 'AWS_ACCESS_KEY_ID')
 aws_secret_access_key = Secret('env', 'AWS_SECRET_ACCESS_KEY', 'airflow-aws', 'AWS_SECRET_ACCESS_KEY')
@@ -27,7 +28,20 @@ DAG_NAME = 'test_dag_v1'
 
 default_args = {
     'owner': 'airflow',
-    'depends_on_past': True,
+    'namespace': 'airflow',
+    'depends_on_past': False,
+    'get_logs': True,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 0,
+    'retry_delay': timedelta(minutes=5),
+    'image_pull_policy': 'Always',
+    'is_delete_operator_pod': False,
+    'do_xcom_push': False,
+    'volumes': [volume],
+    'volume_mounts': [volume_mount],
+    'labels': {"project": "cthulhu"},
+    'secrets': [aws_account, aws_access_key_id, aws_secret_access_key],
     'start_date': days_ago(1)
 }
 dag = DAG(DAG_NAME, schedule_interval='*/10 * * * *', default_args=default_args)
