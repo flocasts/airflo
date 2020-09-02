@@ -58,15 +58,6 @@ bash_baseline = KubernetesPodOperator(
     dag=dag
 )
 
-bash_baseline1 = KubernetesPodOperator(
-    image="atherin/pyspark:2.4.4",
-    cmds=["/bin/bash", "-c"],
-    arguments=["pwd; ls /opt/;"],
-    name="bash_baseline1",
-    task_id="bash-baseline1-task",
-    dag=dag
-)
-
 pyspark_segmentation = KubernetesPodOperator(
     image="atherin/pyspark:2.4.4",
     cmds=["python"],
