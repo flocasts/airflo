@@ -1,7 +1,7 @@
 airflow:
   image:
      repository: gcr.io/engineering-sandbox-228018/dev-airflow
-     tag: 1.10.12
+     tag: 1.10.9
   executor: Kubernetes
   service:
     type: LoadBalancer
@@ -29,7 +29,7 @@ airflow:
 
     AIRFLOW__KUBERNETES__NAMESPACE: airflow
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: gcr.io/engineering-sandbox-228018/dev-airflow
-    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.12
+    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.9
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: IfNotPresent
     AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
     AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: nfs-airflow-dags

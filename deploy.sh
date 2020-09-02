@@ -34,7 +34,7 @@ fi
 
 if [ "${LOCAL}" == "True" ]; then
     AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}local-airflow.yaml
-    AIRFLOW_IMAGE=atherin/airflow:1.10.12
+    AIRFLOW_IMAGE=atherin/airflow:1.10.9
     SPARK_IMAGE=atherin/pyspark:2.4.4
 
     if ! minikube status >/dev/null 2>&1; then
@@ -53,7 +53,7 @@ else
     GKE_NAME="sandbox"
     CONTEXT="gke_${PROJECT_ID}_${REGION}_${GKE_NAME}"
     AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}${ENV}-airflow.yaml
-    AIRFLOW_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-airflow:1.10.12
+    AIRFLOW_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-airflow:1.10.9
     SPARK_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-pyspark:2.4.4
 
     gcloud container clusters get-credentials ${GKE_NAME}
