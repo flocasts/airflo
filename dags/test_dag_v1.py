@@ -1,8 +1,8 @@
 from airflow.models.dag import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.dates import days_ago
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
-# from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOperator
+# from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
+from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOperator
 from airflow.contrib.kubernetes.secret import Secret
 from airflow.contrib.kubernetes.volume import Volume
 from airflow.contrib.kubernetes.volume_mount import VolumeMount
@@ -34,17 +34,7 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'max_active_runs': 1,
-    'retries': 0,
-    'retry_delay': timedelta(minutes=5),
-    'image_pull_policy': 'Always',
-    'is_delete_operator_pod': False,
-    'do_xcom_push': False,
-    'volumes': [volume],
-    'volume_mounts': [volume_mount],
-    'labels': {"project": "cthulhu"},
-    'secrets': [aws_account, aws_access_key_id, aws_secret_access_key],
-    'schedule_interval': '0 0 1 * *',
-    'start_date': days_ago(1)
+    'retries': 0
 }
 dag = DAG(dag_id='test_dag_v1', default_args=default_args)
 
