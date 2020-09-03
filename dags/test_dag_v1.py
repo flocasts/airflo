@@ -45,7 +45,7 @@ default_args = {
     'schedule_interval': '0 0 1 * *',
     'start_date': days_ago(1)
 }
-dag = DAG('test_dag_v1', default_args=default_args)
+dag = DAG(dag_id='test_dag_v1', default_args=default_args)
 
 bash_baseline = DummyOperator(
     image=spark_image,
