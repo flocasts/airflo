@@ -9,7 +9,7 @@ AIRFLOW_HELM_PATH = $(BASE_PATH)/helm/official/charts/stable/airflow/
 AIRFLOW_DAGS_PATH = $(BASE_PATH)/dags/
 AIRFLOW_JOBS_PATH = $(BASE_PATH)/jobs/
 APPLICATION_NAME = airflow
-NAMESPACE = airflow
+NAMESPACE = bolian
 ENV = dev
 LOCAL = False
 PROJECT_ID = engineering-sandbox-228018
@@ -77,7 +77,7 @@ clean-k8:
 	kubectl delete namespace $(NAMESPACE)
 
 clean-helm:
-	helm delete ${APPLICATION_NAME}
+	helm3 delete ${APPLICATION_NAME}
 
 clean-docker:
 	$(eval _IMAGES=$(shell docker images -q -f dangling=true))
@@ -94,7 +94,7 @@ clean-docker:
 clean-quick:
 	make clean-helm
 	make clean-k8
-	make clean-docker
+	# make clean-docker
 
 debug-k8-web:
 	$(eval _POD=$(shell kubectl get pods --namespace $(NAMESPACE) -l "component=web" -o jsonpath="{.items[0].metadata.name}"))
@@ -134,11 +134,11 @@ status-k8:
 	fi
 
 update:
-	helm upgrade ${APPLICATION_NAME} --install -f ${AIRFLOW_HELM_PATH}${ENV}-airflow.yaml ${AIRFLOW_HELM_PATH} --namespace ${NAMESPACE}
+	helm3 upgrade ${APPLICATION_NAME} --install -f ${AIRFLOW_HELM_PATH}${ENV}-airflow.yaml ${AIRFLOW_HELM_PATH} --namespace ${NAMESPACE}
 
 update-helm:
-	helm dependency update ${AIRFLOW_HELM_PATH}
-	helm dependency build ${AIRFLOW_HELM_PATH}
+	helm3 dependency update ${AIRFLOW_HELM_PATH}
+	helm3 dependency build ${AIRFLOW_HELM_PATH}
 
 update-docker-airflow:
 	make build-docker-airflow

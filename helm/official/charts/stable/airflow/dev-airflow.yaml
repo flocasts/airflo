@@ -28,7 +28,7 @@ airflow:
     # Temporary dummy login
     # airflow create_user --lastname West --firstname Adam --username caped --email test@mail.com --role Admin --password crusader
     # helm upgrade --install airflow -f /Users/andrewtan/Documents/airflo/helm/official/charts/stable/airflow/dev-airflow.yaml /Users/andrewtan/Documents/airflo/helm/official/charts/stable/airflow/ --namespace airflow
-    AIRFLOW__WEBSERVER__RBAC: True
+    AIRFLOW__WEBSERVER__RBAC: False
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: True
     AIRFLOW__WEBSERVER__LOG_FETCH_TIMEOUT_SEC: 30
 

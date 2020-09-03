@@ -1,8 +1,8 @@
 #!/bin/bash
 set -eux
 
-ENV=$1
-LOCAL=$2
+ENV=dev
+LOCAL=False
 if [ -z "$ENV" ]; then
     ENV=dev
 fi
@@ -13,7 +13,7 @@ fi
 
 PROJECT_ID="engineering-sandbox-228018"
 APPLICATION_NAME="airflow"
-NAMESPACE="airflow"
+NAMESPACE="bolian"
 BASE_PATH=$(pwd)
 AIRFLOW_DOCKER_PATH=${BASE_PATH}/docker/puckel/docker-airflow/
 SPARK_DOCKER_PATH=${BASE_PATH}/docker/atherin/docker-spark/
@@ -23,8 +23,8 @@ AIRFLOW_DAGS_PATH=${BASE_PATH}/dags/
 # NFS_HELM_CHART=${NFS_HELM_PATH}values.yaml
 
 echo "Deploying ${APPLICATION_NAME}:${ENV}..."
-docker-machine env default
-eval $(docker-machine env default)
+#docker-machine env default
+#eval $(docker-machine env default)
 
 if [ "${ENV}" == "prod" ]; then
     BUCKET="flosports-data-warehouse-sources"
@@ -56,7 +56,7 @@ else
     AIRFLOW_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-airflow:1.10.12
     SPARK_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-pyspark:2.4.4
 
-    gcloud container clusters get-credentials ${GKE_NAME}
+    #gcloud container clusters get-credentials ${GKE_NAME}
     if ! kubectl get namespace ${NAMESPACE} >/dev/null 2>&1; then
         kubectl create namespace ${NAMESPACE}
     fi
@@ -119,10 +119,10 @@ if ! kubectl get secret gcr-json-key --namespace ${NAMESPACE} >/dev/null 2>&1; t
     fi
 fi
 
-if ! helm status ${APPLICATION_NAME} --namespace ${NAMESPACE}>/dev/null 2>&1; then
+if ! helm3 status ${APPLICATION_NAME} --namespace ${NAMESPACE}>/dev/null 2>&1; then
     echo "Configuring helm..."
     # helm install nfs-server -f ${NFS_HELM_CHART} ${NFS_HELM_PATH} --namespace ${NAMESPACE}
-    helm install ${APPLICATION_NAME} -f ${AIRFLOW_HELM_CHART} ${AIRFLOW_HELM_PATH} --namespace ${NAMESPACE}
+    helm3 install ${APPLICATION_NAME} -f ${AIRFLOW_HELM_CHART} ${AIRFLOW_HELM_PATH} --namespace ${NAMESPACE}
 fi
 
 export SERVICE_IP=$(kubectl get svc airflow-web -o jsonpath='{.spec.clusterIP}' --namespace ${NAMESPACE})
