@@ -32,7 +32,6 @@ default_args = {
     'depends_on_past': False,
     'email_on_failure': False,
     'email_on_retry': False,
-    'get_logs': True,
     'max_active_runs': 1,
     'retries': 0,
     'retry_delay': timedelta(minutes=5),
@@ -48,7 +47,7 @@ default_args = {
 }
 dag = DAG('test_dag_v1', default_args=default_args)
 
-bash_baseline = KubernetesPodOperator(
+bash_baseline = DummyOperator(
     image=spark_image,
     cmds=["/bin/bash", "-c"],
     arguments=["pwd; ls /;"],
