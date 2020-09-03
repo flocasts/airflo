@@ -49,7 +49,10 @@ default_args = {
 dag = DAG('test_dag_v1', default_args=default_args)
 
 bash_baseline = KubernetesPodOperator(
-    image='gcr.io/engineering-sandbox-228018/dev-airflow:1.10.12',
+    image=spark_image,
+    cmds=["/bin/bash", "-c"],
+    arguments=["pwd; ls /;"],
+    name="bash_baseline",
     task_id="bash_baseline",
     dag=dag
 )
