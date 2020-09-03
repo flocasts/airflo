@@ -47,7 +47,7 @@ default_args = {
 }
 dag = DAG(dag_id='test_dag_v1', default_args=default_args)
 
-bash_baseline = DummyOperator(
+bash_baseline = KubernetesPodOperator(
     image=spark_image,
     cmds=['/bin/bash', '-c'],
     arguments=['pwd; ls /;'],
