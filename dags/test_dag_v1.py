@@ -34,7 +34,8 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'max_active_runs': 1,
-    'retries': 0
+    'retries': 0,
+    'start_date': days_ago(1)
 }
 dag = DAG(dag_id='test_dag_v1', default_args=default_args)
 
