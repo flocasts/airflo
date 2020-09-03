@@ -69,7 +69,7 @@ dags:
   git:
     url: https://github.com/flocasts/airflo.git
     ref: DATA-2379
-    secret: airflow-git
+    secret: zbolian/gke_deploy
     repoHost: "github.com"
     privateKeyName: ""
     gitSync:
