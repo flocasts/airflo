@@ -13,7 +13,7 @@ fi
 
 PROJECT_ID="engineering-sandbox-228018"
 APPLICATION_NAME="airflow"
-NAMESPACE="airflow"
+NAMESPACE="bolian"
 BASE_PATH=$(pwd)
 AIRFLOW_DOCKER_PATH=${BASE_PATH}/docker/puckel/docker-airflow/
 SPARK_DOCKER_PATH=${BASE_PATH}/docker/atherin/docker-spark/
@@ -119,10 +119,10 @@ if ! kubectl get secret gcr-json-key --namespace ${NAMESPACE} >/dev/null 2>&1; t
     fi
 fi
 
-if ! helm status ${APPLICATION_NAME} --namespace ${NAMESPACE}>/dev/null 2>&1; then
+if ! helm3 status ${APPLICATION_NAME} --namespace ${NAMESPACE}>/dev/null 2>&1; then
     echo "Configuring helm..."
     # helm install nfs-server -f ${NFS_HELM_CHART} ${NFS_HELM_PATH} --namespace ${NAMESPACE}
-    helm install ${APPLICATION_NAME} -f ${AIRFLOW_HELM_CHART} ${AIRFLOW_HELM_PATH} --namespace ${NAMESPACE}
+    helm3 install ${APPLICATION_NAME} -f ${AIRFLOW_HELM_CHART} ${AIRFLOW_HELM_PATH} --namespace ${NAMESPACE}
 fi
 
 export SERVICE_IP=$(kubectl get svc airflow-web -o jsonpath='{.spec.clusterIP}' --namespace ${NAMESPACE})
