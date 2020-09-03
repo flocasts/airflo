@@ -49,10 +49,10 @@ dag = DAG('test_dag_v1', default_args=default_args)
 
 bash_baseline = DummyOperator(
     image=spark_image,
-    cmds=["/bin/bash", "-c"],
-    arguments=["pwd; ls /;"],
-    name="bash_baseline",
-    task_id="bash_baseline",
+    cmds=['/bin/bash', '-c'],
+    arguments=['pwd; ls /;'],
+    name='bash_baseline',
+    task_id='bash_baseline',
     dag=dag
 )
 run_this_1 = DummyOperator(task_id='run_this_1', dag=dag)
