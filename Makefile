@@ -96,9 +96,9 @@ clean-quick:
 	make clean-k8
 	make clean-docker
 
-debug-k8:
-	$(eval _POD=$(shell kubectl get pods --namespace $(NAMESPACE) -l "component=web,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
-	kubectl logs $(_POD) -p
+debug-k8-web:
+	$(eval _POD=$(shell kubectl get pods --namespace $(NAMESPACE) -l "component=web" -o jsonpath="{.items[0].metadata.name}"))
+	kubectl logs $(_POD) -c airflow-web
 	# lsof -i :8080
 	# kubectl describe pod $(_POD)
 	# kubectl get all --namespace $(NAMESPACE) # --all-namespaces
