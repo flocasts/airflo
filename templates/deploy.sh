@@ -24,16 +24,8 @@ echo "Deploying ${APPLICATION_NAME}:${ENV}..."
 docker-machine env default
 eval $(docker-machine env default)
 
-if [ "${ENV}" == "prod" ]; then
-    BUCKET="flosports-data-warehouse-sources"
-else
-    BUCKET="datawarehouse-staging-sources"
-fi
-
 if [ "${LOCAL}" == "True" ]; then
-    AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}local-airflow.yaml
-    AIRFLOW_IMAGE=atherin/airflow:1.10.10
-    SPARK_IMAGE=atherin/pyspark:2.4.4
+    AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}airflow-local.yaml
 
     if ! minikube status >/dev/null 2>&1; then
         minikube start --vm-driver=virtualbox --memory=6096 --disk-size=20000mb --kubernetes-version v1.15.0
@@ -50,9 +42,7 @@ else
     REGION="us-central1-c"
     CLUSTER_NAME="sandbox"
     CONTEXT="gke_${PROJECT_ID}_${REGION}_${CLUSTER_NAME}"
-    AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}${ENV}-airflow.yaml
-    AIRFLOW_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-airflow:1.10.10
-    SPARK_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-pyspark:2.4.4
+    AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}airflow-${ENV}.yaml
 
     gcloud container clusters get-credentials ${CLUSTER_NAME}
     if ! kubectl get namespace ${NAMESPACE} >/dev/null 2>&1; then

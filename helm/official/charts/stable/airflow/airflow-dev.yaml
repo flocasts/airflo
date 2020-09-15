@@ -1,17 +1,16 @@
 airflow:
   image:
-    repository: R_IMG
+    repository: gcr.io/engineering-sandbox-228018/dev-airflow
     tag: 1.10.10
     ## values: Always or IfNotPresent
     pullPolicy: Always
-  fernetKey: R_FERNET
   service:
     type: LoadBalancer
 
   config:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: True
     AIRFLOW__CORE__LOGGING_LEVEL: INFO
-    AIRFLOW__CORE__FERNET_KEY: -VPrAtf3PunVqdBKdURvTnbn0VYOJfBqivkz9N3K2qo=
+    AIRFLOW__CORE__FERNET_KEY: 2hH8qalrOj78MLjBXNThPL1yT5xfRk8SddIrSpPeJ1k=
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:airflow@airflow-postgresql:5432/airflow
     AIRFLOW__CORE__LOAD_EXAMPLES: False
 
@@ -28,10 +27,10 @@ airflow:
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: True
     AIRFLOW__WEBSERVER__LOG_FETCH_TIMEOUT_SEC: 30
 
-    AIRFLOW__KUBERNETES__NAMESPACE: R_SPACE
+    AIRFLOW__KUBERNETES__NAMESPACE: ns-airflow
 
-    AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: R_IMG
-    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.10
+    AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: gcr.io/engineering-sandbox-228018/dev-airflow
+    AIRFLOW__KUBERNETES__WORKER_CONTAINE1.10.10: 1.10.10
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: Always
     AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
     AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: nfs-airflow-dags

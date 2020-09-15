@@ -18,19 +18,19 @@ PROJECT_ID = engineering-sandbox-228018
 ifeq ($(LOCAL), True)
 	AIRFLOW_IMG_NAME = atherin/airflow
 	SPARK_IMG_NAME = atherin/pyspark
-	HELM_CHART = local-airflow.yaml
+	HELM_CHART = airflow-local.yaml
 	HELM_CHART_PATH = $(AIRFLOW_HELM_PATH)$(HELM_CHART)
 else
 	AIRFLOW_IMG_NAME = gcr.io/$(PROJECT_ID)/$(ENV)-airflow
 	SPARK_IMG_NAME = gcr.io/$(PROJECT_ID)/$(ENV)-pyspark
-	HELM_CHART = $(ENV)-airflow.yaml
+	HELM_CHART = airflow-$(ENV).yaml
 	HELM_CHART_PATH = $(AIRFLOW_HELM_PATH)$(HELM_CHART)
 endif
 AIRFLOW_IMG_TAG = 1.10.10
 SPARK_IMG_TAG = 2.4.4
 AIRFLOW_IMG = $(AIRFLOW_IMG_NAME):$(AIRFLOW_IMG_TAG)
 SPARK_IMG = $(SPARK_IMG_NAME):$(SPARK_IMG_TAG)
-AWK_STR='{gsub(/R_IMG/,R_IMG);sub(/R_SPACE/,R_SPACE);}1'
+AWK_STR='{gsub(/R_FERNET/,R_FERNET);gsub(/R_IMG/,R_IMG);gsub(/R_SPACE/,R_SPACE);gsub(/R_TAG/,R_TAG);}1'
 
 bash-docker-airflow:
 	docker run -it --entrypoint /bin/bash --rm $(AIRFLOW_IMG); \
@@ -126,8 +126,8 @@ tail-k8-web:
 	kubectl logs $(_POD) -c airflow-web -n ${NAMESPACE} -f
 
 tail-k8-scheduler:
-	$(eval _POD=$(shell kubectl get pods -n $(NAMESPACE) -l "component=scheduler" -o jsonpath="{.items[0].metadata.name}"))
-	kubectl logs $(_POD) -c airflow-scheduler -n ${NAMESPACE} -f
+	$(eval POD=$(shell kubectl get pods -n $(NAMESPACE) -l "component=scheduler" -o jsonpath="{.items[0].metadata.name}"))
+	kubectl logs $(POD) -c airflow-scheduler -n ${NAMESPACE} -f
 
 update: update-scripts
 	helm upgrade ${APPLICATION_NAME} --install -f ${HELM_CHART_PATH} ${AIRFLOW_HELM_PATH} -n ${NAMESPACE}
@@ -139,8 +139,9 @@ update-helm:
 	helm dependency build ${AIRFLOW_HELM_PATH}
 
 update-scripts:
+	$(eval FERNET=$(shell python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"))
 	rm ${HELM_CHART_PATH}
-	awk -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' ${AWK_STR} ${TEMPLATE_PATH}${HELM_CHART} > ${HELM_CHART_PATH}
+	awk -v R_FERNET='${FERNET}' -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' -v R_TAG='${AIRFLOW_IMG_TAG}' ${AWK_STR} ${TEMPLATE_PATH}${HELM_CHART} > ${HELM_CHART_PATH}
 	rm ${NFS_PATH}delete_nfs.sh
 	awk -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' ${AWK_STR} ${TEMPLATE_PATH}delete_nfs.sh > ${NFS_PATH}delete_nfs.sh
 	rm ${BASE_PATH}/deploy.sh
