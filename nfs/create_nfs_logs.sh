@@ -4,6 +4,7 @@ set -e
 
 NAMESPACE=ns-airflow
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+TEMPLATE_DIR=${DIR/nfs/templates}
 WAIT_SECONDS=3
 
 kubectl create namespace ${NAMESPACE} || true
@@ -25,5 +26,5 @@ done
 
 echo "NFS server IP: ${NFS_SERVER_IP}"
 
-sed -e "s/NFS_SERVER_POD_IP_ADDRESS/${NFS_SERVER_IP}/" ${DIR}/volumes_logs.yaml > ${DIR}/volumes_logs_complete.yaml
-kubectl apply -f ${DIR}/volumes_logs_complete.yaml --namespace=${NAMESPACE}
+sed -e "s/NFS_SERVER_POD_IP_ADDRESS/${NFS_SERVER_IP}/" ${TEMPLATE_DIR}/volumes_logs.yaml > ${DIR}/volumes_logs.yaml
+kubectl apply -f ${DIR}/volumes_logs.yaml --namespace=${NAMESPACE}

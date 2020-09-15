@@ -4,6 +4,7 @@ airflow:
     tag: 1.10.10
     ## values: Always or IfNotPresent
     pullPolicy: Always
+  fernetKey: R_FERNET
   service:
     type: LoadBalancer
 
