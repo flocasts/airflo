@@ -1,9 +1,5 @@
 # Airflow in Kubernetes Executor
 
-### Caveats
-- Currently set to run locally.
-- In-progress
-
 ### Pre-requisite
 - Download Docker Desktop from [here](https://www.docker.com/products/docker-desktop] and setup in your local machine)
 - Download Virtualbox from [here](https://www.virtualbox.org/wiki/Downloads) and setup in your local machine
@@ -12,7 +8,7 @@
     bash
     brew update
 
-    # install minikube
+    # install minikube for local development
     brew install minikube
 
     # install helm
@@ -27,17 +23,22 @@
     eval $(docker-machine env)
     ```
 
-## Building Locally
+## Deployment
 
 ```
 bash
 
+# Set params on Makefile
+# Setting LOCAL = False will deploy to GCP
+
 # If the Airflow UI doesn't load, wait until the K8s dashboard is healthy (~6-10 min).
 $ make start
 
-# Once `make-start` completes, the following can be run on different terminals.
+# Once `make-start` completes, the following can be run on different terminals for monitoring.
 $ kubectl get pods --watch  # to monitor the pod health
-$ minikube dashboard  # to get the K8S dashboard
+$ make browse-dash  # to get the K8s dashboard
+$ make tail-k8-web  # tails log for web pod
+$ make tail-k8-scheduler  # tails log for scheduler pod
 
 # Once you are done with the services you can stop everything with the following:
 $ make clean

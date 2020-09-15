@@ -1,7 +1,0 @@
-charts:
-  - official/postgresql #PVC usage
-  - official/cockroachdb #StatefulSet
-  - official/etcd-operator #Operator & CustomResource
-  - official/prometheus
-  - official/jenkins
-  - incubator/zookeeper

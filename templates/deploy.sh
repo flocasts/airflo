@@ -13,7 +13,7 @@ fi
 
 PROJECT_ID="engineering-sandbox-228018"
 APPLICATION_NAME="airflow"
-NAMESPACE=ns-airflow
+NAMESPACE=R_SPACE
 BASE_PATH=$(pwd)
 AIRFLOW_DOCKER_PATH=${BASE_PATH}/docker/docker-airflow/
 SPARK_DOCKER_PATH=${BASE_PATH}/docker/docker-spark/

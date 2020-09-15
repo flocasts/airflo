@@ -1,0 +1,84 @@
+airflow:
+  image:
+    repository: R_IMG
+    tag: 1.10.10
+    ## values: Always or IfNotPresent
+    pullPolicy: Always
+  service:
+    type: LoadBalancer
+
+  config:
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: True
+    AIRFLOW__CORE__LOGGING_LEVEL: INFO
+    AIRFLOW__CORE__FERNET_KEY: -VPrAtf3PunVqdBKdURvTnbn0VYOJfBqivkz9N3K2qo=
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:airflow@airflow-postgresql:5432/airflow
+    AIRFLOW__CORE__LOAD_EXAMPLES: False
+
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://postgres:airflow@airflow-postgresql:5432/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:airflow@airflow-redis-master:6379/0
+
+    AIRFLOW__SCHEDULER__CATCHUP_BY_DEFAULT: False
+
+    # Remote Logging
+    AIRFLOW__CORE__REMOTE_LOGGING: False
+
+    # Enable 2.0 UI
+    AIRFLOW__WEBSERVER__RBAC: False
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: True
+    AIRFLOW__WEBSERVER__LOG_FETCH_TIMEOUT_SEC: 30
+
+    AIRFLOW__KUBERNETES__NAMESPACE: R_SPACE
+
+    AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: R_IMG
+    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.10
+    AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: Always
+    AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
+    AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: nfs-airflow-dags
+    AIRFLOW__KUBERNETES__DAGS_VOLUME_SUBPATH: dags
+    AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: nfs-airflow-logs
+    AIRFLOW__KUBERNETES__DELETE_WORKER_PODS: True
+    AIRFLOW__KUBERNETES__KUBE_CLIENT_REQUEST_ARGS: '{\"_request_timeout\":[60, 60]}'
+
+  extraVolumeMounts:
+    - name: synchronised-data
+      mountPath: /opt/airflow/nfs
+
+  extraVolumes:
+    - name: synchronised-data
+      emptyDir: {}
+
+dags:
+  path: /opt/airflow/nfs/dags
+  doNotPickle: false
+  git:
+    url: https://github.com/flocasts/airflo.git
+    ref: dev
+    secret: airflow-git
+    repoHost: "github.com"
+    privateKeyName: ""
+    gitSync:
+      enabled: true
+      image:
+        repository: alpine/git
+        tag: latest
+        pullPolicy: IfNotPresent
+      refreshTime: 60
+  initContainer:
+    enabled: true
+    image:
+      repository: alpine/git
+      tag: latest
+      pullPolicy: IfNotPresent
+    installRequirements: true
+    mountPath: "/dags"
+    syncSubPath: ""
+
+serviceAccount:
+  name: "airflow"
+
+logs:
+  path: /opt/airflow/nfs/logs
+
+flower:
+  service:
+    type: LoadBalancer
