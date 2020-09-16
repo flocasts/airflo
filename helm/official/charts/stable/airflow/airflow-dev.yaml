@@ -10,7 +10,7 @@ airflow:
   config:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: True
     AIRFLOW__CORE__LOGGING_LEVEL: INFO
-    AIRFLOW__CORE__FERNET_KEY: 2hH8qalrOj78MLjBXNThPL1yT5xfRk8SddIrSpPeJ1k=
+    AIRFLOW__CORE__FERNET_KEY: _UdZ6c5MrNarofGMXoym98JQ01VOq13FyPu-OvFKhsM=
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:airflow@airflow-postgresql:5432/airflow
     AIRFLOW__CORE__LOAD_EXAMPLES: False
 
@@ -30,7 +30,7 @@ airflow:
     AIRFLOW__KUBERNETES__NAMESPACE: ns-airflow
 
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: gcr.io/engineering-sandbox-228018/dev-airflow
-    AIRFLOW__KUBERNETES__WORKER_CONTAINE1.10.10: 1.10.10
+    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: 1.10.10
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: Always
     AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
     AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: nfs-airflow-dags
@@ -73,12 +73,25 @@ dags:
     mountPath: "/dags"
     syncSubPath: ""
 
+ingress:
+  enabled: true
+  web:
+    host: "airflo.atherin.net"
+  flower:
+    path: "/flower"
+    host: "airflo.atherin.net"
+
 serviceAccount:
   name: "airflow"
 
 logs:
   path: /opt/airflow/nfs/logs
 
+web:
+  service:
+    type: LoadBalancer
+
 flower:
+  urlPrefix: "/flower"
   service:
     type: LoadBalancer

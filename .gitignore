@@ -31,7 +31,11 @@ __pycache__/
 ###########################
 docker/docker-airflow/jobs/
 docker/docker-spark/jobs/
+nfs/volumes_dags.yaml
+nfs/volumes_logs.yaml
+helm/official/charts/stable/airflow/airflow-*.yaml
 example.py
+deploy.sh
 run.sh
 base.yaml
 celerybeat-schedule
@@ -40,7 +44,6 @@ local_settings.py
 nosetests.xml
 resource.yaml
 resource.yml
-*.tgz
 *.bak
 *.bk
 *.cover

@@ -1,7 +1,7 @@
 airflow:
   image:
     repository: R_IMG
-    tag: R_TAG
+    tag: R_ITAG
     ## values: Always or IfNotPresent
     pullPolicy: Always
   service:
@@ -30,7 +30,7 @@ airflow:
     AIRFLOW__KUBERNETES__NAMESPACE: R_SPACE
 
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: R_IMG
-    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: R_TAG
+    AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: R_ITAG
     AIRFLOW__KUBERNETES__WORKER_CONTAINER_IMAGE_PULL_POLICY: Always
     AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME: airflow
     AIRFLOW__KUBERNETES__DAGS_VOLUME_CLAIM: nfs-airflow-dags
@@ -73,12 +73,25 @@ dags:
     mountPath: "/dags"
     syncSubPath: ""
 
+ingress:
+  enabled: true
+  web:
+    host: "airflo.atherin.net"
+  flower:
+    path: "/flower"
+    host: "airflo.atherin.net"
+
 serviceAccount:
   name: "airflow"
 
 logs:
   path: /opt/airflow/nfs/logs
 
+web:
+  service:
+    type: LoadBalancer
+
 flower:
+  urlPrefix: "/flower"
   service:
     type: LoadBalancer

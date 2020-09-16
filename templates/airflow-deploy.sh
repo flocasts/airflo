@@ -14,6 +14,7 @@ fi
 PROJECT_ID="engineering-sandbox-228018"
 APPLICATION_NAME="airflow"
 NAMESPACE=R_SPACE
+AIRFLOW_VERSION=R_ITAG
 BASE_PATH=$(pwd)
 AIRFLOW_DOCKER_PATH=${BASE_PATH}/docker/docker-airflow/
 SPARK_DOCKER_PATH=${BASE_PATH}/docker/docker-spark/
@@ -23,6 +24,12 @@ AIRFLOW_DAGS_PATH=${BASE_PATH}/dags/
 echo "Deploying ${APPLICATION_NAME}:${ENV}..."
 docker-machine env default
 eval $(docker-machine env default)
+
+if [ "${ENV}" == "prod" ]; then
+    BUCKET="flosports-data-warehouse-sources"
+else
+    BUCKET="datawarehouse-staging-sources"
+fi
 
 if [ "${LOCAL}" == "True" ]; then
     AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}airflow-local.yaml
@@ -84,6 +91,7 @@ if ! kubectl get secret airflow-aws --namespace ${NAMESPACE} >/dev/null 2>&1; th
     --from-literal=AWS_ACCOUNT=${AWS_ACCOUNT}
 fi
 if ! kubectl get secret airflow-git --namespace ${NAMESPACE} >/dev/null 2>&1; then
+    mkdir -p ${BASE_PATH}/config
     rsync -a ~/.ssh/ ${BASE_PATH}/config
     kubectl create secret generic airflow-git \
     --namespace ${NAMESPACE} \
@@ -93,7 +101,7 @@ if ! kubectl get secret airflow-git --namespace ${NAMESPACE} >/dev/null 2>&1; th
     rm -rf ${BASE_PATH}/config
 fi
 if ! kubectl get secret gcr-json-key --namespace ${NAMESPACE} >/dev/null 2>&1; then
-    mkdir ${BASE_PATH}/config
+    mkdir -p ${BASE_PATH}/config
     aws s3api get-object --profile ${ENV} --bucket ${BUCKET} --key config/${PROJECT_ID}.json ${BASE_PATH}/config/${PROJECT_ID}.json
     kubectl create secret docker-registry gcr-json-key \
     --namespace ${NAMESPACE} \
@@ -107,8 +115,13 @@ if ! kubectl get secret gcr-json-key --namespace ${NAMESPACE} >/dev/null 2>&1; t
     fi
 fi
 
+if ! helm status nginx-ingress --namespace ${NAMESPACE}>/dev/null 2>&1; then
+    echo "Helm Ingress install..."
+    helm install nginx-ingress stable/nginx-ingress --namespace ${NAMESPACE} --set controller.service.externalTrafficPolicy=Local
+fi
+
 if ! helm status ${APPLICATION_NAME} --namespace ${NAMESPACE}>/dev/null 2>&1; then
-    echo "Configuring helm..."
+    echo "Helm Airflow install..."
     helm install ${APPLICATION_NAME} -f ${AIRFLOW_HELM_CHART} ${AIRFLOW_HELM_PATH} --namespace ${NAMESPACE}
 fi
 

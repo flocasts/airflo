@@ -14,6 +14,7 @@ fi
 PROJECT_ID="engineering-sandbox-228018"
 APPLICATION_NAME="airflow"
 NAMESPACE=ns-airflow
+AIRFLOW_VERSION=1.10.10
 BASE_PATH=$(pwd)
 AIRFLOW_DOCKER_PATH=${BASE_PATH}/docker/docker-airflow/
 SPARK_DOCKER_PATH=${BASE_PATH}/docker/docker-spark/
@@ -31,9 +32,7 @@ else
 fi
 
 if [ "${LOCAL}" == "True" ]; then
-    AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}local-airflow.yaml
-    AIRFLOW_IMAGE=atherin/airflow:1.10.10
-    SPARK_IMAGE=atherin/pyspark:2.4.4
+    AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}airflow-local.yaml
 
     if ! minikube status >/dev/null 2>&1; then
         minikube start --vm-driver=virtualbox --memory=6096 --disk-size=20000mb --kubernetes-version v1.15.0
@@ -50,9 +49,7 @@ else
     REGION="us-central1-c"
     CLUSTER_NAME="sandbox"
     CONTEXT="gke_${PROJECT_ID}_${REGION}_${CLUSTER_NAME}"
-    AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}${ENV}-airflow.yaml
-    AIRFLOW_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-airflow:1.10.10
-    SPARK_IMAGE=gcr.io/${PROJECT_ID}/${ENV}-pyspark:2.4.4
+    AIRFLOW_HELM_CHART=${AIRFLOW_HELM_PATH}airflow-${ENV}.yaml
 
     gcloud container clusters get-credentials ${CLUSTER_NAME}
     if ! kubectl get namespace ${NAMESPACE} >/dev/null 2>&1; then
@@ -94,6 +91,7 @@ if ! kubectl get secret airflow-aws --namespace ${NAMESPACE} >/dev/null 2>&1; th
     --from-literal=AWS_ACCOUNT=${AWS_ACCOUNT}
 fi
 if ! kubectl get secret airflow-git --namespace ${NAMESPACE} >/dev/null 2>&1; then
+    mkdir -p ${BASE_PATH}/config
     rsync -a ~/.ssh/ ${BASE_PATH}/config
     kubectl create secret generic airflow-git \
     --namespace ${NAMESPACE} \
@@ -103,7 +101,7 @@ if ! kubectl get secret airflow-git --namespace ${NAMESPACE} >/dev/null 2>&1; th
     rm -rf ${BASE_PATH}/config
 fi
 if ! kubectl get secret gcr-json-key --namespace ${NAMESPACE} >/dev/null 2>&1; then
-    mkdir ${BASE_PATH}/config
+    mkdir -p ${BASE_PATH}/config
     aws s3api get-object --profile ${ENV} --bucket ${BUCKET} --key config/${PROJECT_ID}.json ${BASE_PATH}/config/${PROJECT_ID}.json
     kubectl create secret docker-registry gcr-json-key \
     --namespace ${NAMESPACE} \
@@ -117,8 +115,13 @@ if ! kubectl get secret gcr-json-key --namespace ${NAMESPACE} >/dev/null 2>&1; t
     fi
 fi
 
+if ! helm status nginx-ingress --namespace ${NAMESPACE}>/dev/null 2>&1; then
+    echo "Helm Ingress install..."
+    helm install nginx-ingress stable/nginx-ingress --namespace ${NAMESPACE} --set controller.service.externalTrafficPolicy=Local
+fi
+
 if ! helm status ${APPLICATION_NAME} --namespace ${NAMESPACE}>/dev/null 2>&1; then
-    echo "Configuring helm..."
+    echo "Helm Airflow install..."
     helm install ${APPLICATION_NAME} -f ${AIRFLOW_HELM_CHART} ${AIRFLOW_HELM_PATH} --namespace ${NAMESPACE}
 fi
 

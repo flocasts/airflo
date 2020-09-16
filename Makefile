@@ -30,7 +30,7 @@ AIRFLOW_IMG_TAG = 1.10.10
 SPARK_IMG_TAG = 2.4.4
 AIRFLOW_IMG = $(AIRFLOW_IMG_NAME):$(AIRFLOW_IMG_TAG)
 SPARK_IMG = $(SPARK_IMG_NAME):$(SPARK_IMG_TAG)
-AWK_STR='{gsub(/R_FERNET/,R_FERNET);gsub(/R_IMG/,R_IMG);gsub(/R_SPACE/,R_SPACE);gsub(/R_TAG/,R_TAG);}1'
+AWK_STR='{gsub(/R_FERNET/,R_FERNET);gsub(/R_IMG/,R_IMG);gsub(/R_SPACE/,R_SPACE);gsub(/R_ITAG/,R_ITAG);}1'
 
 bash-docker-airflow:
 	docker run -it --entrypoint /bin/bash --rm $(AIRFLOW_IMG); \
@@ -51,6 +51,8 @@ bash-k8-worker:
 	kubectl exec ${_POD} -c airflow-worker -n ${NAMESPACE} -it -- /bin/bash
 
 browse-web:
+	$(eval INGRESS_IP=$(shell kubectl get svc -n ${NAMESPACE} --selector=app=nginx-ingress,component=controller -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'))
+	echo 'Ingress at ${INGRESS_IP}'
 	$(eval _POD=$(shell kubectl get pods -n $(NAMESPACE) -l "component=web,app=airflow" -o jsonpath="{.items[0].metadata.name}"))
 	open "http://127.0.0.1:8080"
 	kubectl port-forward -n ${NAMESPACE} ${_POD} 8080:8080
@@ -122,8 +124,8 @@ status-k8:
 	fi
 
 tail-k8-web:
-	$(eval _POD=$(shell kubectl get pods -n $(NAMESPACE) -l "component=web" -o jsonpath="{.items[0].metadata.name}"))
-	kubectl logs $(_POD) -c airflow-web -n ${NAMESPACE} -f
+	$(eval POD=$(shell kubectl get pods -n $(NAMESPACE) -l "component=web" -o jsonpath="{.items[0].metadata.name}"))
+	kubectl logs $(POD) -c airflow-web -n ${NAMESPACE} -f
 
 tail-k8-scheduler:
 	$(eval POD=$(shell kubectl get pods -n $(NAMESPACE) -l "component=scheduler" -o jsonpath="{.items[0].metadata.name}"))
@@ -141,11 +143,11 @@ update-helm:
 update-scripts:
 	$(eval FERNET=$(shell python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"))
 	rm ${HELM_CHART_PATH}
-	awk -v R_FERNET='${FERNET}' -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' -v R_TAG='${AIRFLOW_IMG_TAG}' ${AWK_STR} ${TEMPLATE_PATH}${HELM_CHART} > ${HELM_CHART_PATH}
+	awk -v R_FERNET='${FERNET}' -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' -v R_ITAG='${AIRFLOW_IMG_TAG}' ${AWK_STR} ${TEMPLATE_PATH}${HELM_CHART} > ${HELM_CHART_PATH}
 	rm ${NFS_PATH}delete_nfs.sh
 	awk -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' ${AWK_STR} ${TEMPLATE_PATH}delete_nfs.sh > ${NFS_PATH}delete_nfs.sh
 	rm ${BASE_PATH}/deploy.sh
-	awk -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' ${AWK_STR} ${TEMPLATE_PATH}deploy.sh > ${BASE_PATH}/deploy.sh
+	awk -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' -v R_ITAG='${AIRFLOW_IMG_TAG}' ${AWK_STR} ${TEMPLATE_PATH}airflow-deploy.sh > ${BASE_PATH}/deploy.sh
 
 update-docker-airflow:
 	make build-docker-airflow

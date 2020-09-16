@@ -8,7 +8,7 @@ spec:
   accessModes:
     - ReadWriteMany
   nfs:
-    server: NFS_SERVER_POD_IP_ADDRESS
+    server: 10.0.11.57
     path: "/"
 
 ---
