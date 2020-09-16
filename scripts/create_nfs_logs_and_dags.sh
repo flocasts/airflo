@@ -4,7 +4,7 @@ set -e
 
 NAMESPACE=ns-airflow
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-TEMPLATE_DIR=${DIR/nfs/templates}
+TEMPLATE_DIR=${DIR/scripts/templates}
 
 ${DIR}/create_nfs_logs.sh
 

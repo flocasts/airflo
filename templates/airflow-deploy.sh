@@ -74,7 +74,7 @@ fi
 
 if ! kubectl get pvc nfs-airflow-logs --namespace ${NAMESPACE} >/dev/null 2>&1; then
     echo "Generating NFS..."
-    sh nfs/create_nfs_logs_and_dags.sh
+    sh ${BASE_PATH}/scripts/create_nfs_logs_and_dags.sh
 fi
 
 echo "Generating secrets..."

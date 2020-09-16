@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# This is a prepare-commit-msg hook which will insert the current branch name into the
+# commit message if the branch is named after a story (e.g. "FLO-427").
+
+# Enable "strict mode"
+set -e -u -o pipefail
+
+# Get the name of the branch.
+# We are expecting the branch name to be something like "FLO-427/some-feature".
+branch=$( git rev-parse --abbrev-ref HEAD )
+
+# Extract the name of the ticket from the branch name (e.g. "FLO-427").
+ticket=$( echo "${branch}" | perl -ne 'print $1 if /^([A-Z]+-[0-9]+).*/' )
+
+# If we didn't find a ticket name, bail.
+if [ -z "${ticket}" ]
+then
+    exit 0
+fi
+
+# Prepend the ticket name to the commit message file.
+printf "${ticket} $( cat "${1}" )" > "${1}"

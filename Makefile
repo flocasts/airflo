@@ -9,7 +9,7 @@ AIRFLOW_HELM_PATH = $(BASE_PATH)/helm/official/charts/stable/airflow/
 AIRFLOW_DAGS_PATH = $(BASE_PATH)/dags/
 AIRFLOW_JOBS_PATH = $(BASE_PATH)/jobs/
 TEMPLATE_PATH = $(BASE_PATH)/templates/
-NFS_PATH = $(BASE_PATH)/nfs/
+SCRIPTS_PATH = $(BASE_PATH)/scripts/
 APPLICATION_NAME = airflow
 NAMESPACE = ns-airflow
 ENV = dev
@@ -78,7 +78,7 @@ clean: clean-quick update-scripts
 	fi
 
 clean-k8:
-	sh nfs/delete_nfs.sh
+	sh ${SCRIPTS_PATH}delete_nfs.sh
 	kubectl delete namespace $(NAMESPACE)
 
 clean-helm:
@@ -100,6 +100,16 @@ clean-quick:
 	make clean-helm
 	make clean-k8
 	make clean-docker
+
+hooks:
+	@for filename in $(BASE_PATH)/scripts/hooks/*; do \
+		FILE="$$(basename $${filename})"; \
+		DIR="$(BASE_PATH)/.git/hooks/"; \
+		if [ -d $${DIR} ] ; then \
+			cp $(BASE_PATH)/scripts/hooks/$${FILE} $(BASE_PATH)/.git/hooks/$${FILE}; \
+			chmod 755 $(BASE_PATH)/.git/hooks/$${FILE}; \
+		fi \
+	done
 
 push-docker-airflow:
 	docker push $(AIRFLOW_IMG); \
@@ -144,8 +154,8 @@ update-scripts:
 	$(eval FERNET=$(shell python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"))
 	rm ${HELM_CHART_PATH}
 	awk -v R_FERNET='${FERNET}' -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' -v R_ITAG='${AIRFLOW_IMG_TAG}' ${AWK_STR} ${TEMPLATE_PATH}${HELM_CHART} > ${HELM_CHART_PATH}
-	rm ${NFS_PATH}delete_nfs.sh
-	awk -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' ${AWK_STR} ${TEMPLATE_PATH}delete_nfs.sh > ${NFS_PATH}delete_nfs.sh
+	rm ${SCRIPTS_PATH}delete_nfs.sh
+	awk -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' ${AWK_STR} ${TEMPLATE_PATH}delete_nfs.sh > ${SCRIPTS_PATH}delete_nfs.sh
 	rm ${BASE_PATH}/deploy.sh
 	awk -v R_IMG='${AIRFLOW_IMG_NAME}' -v R_SPACE='${NAMESPACE}' -v R_ITAG='${AIRFLOW_IMG_TAG}' ${AWK_STR} ${TEMPLATE_PATH}airflow-deploy.sh > ${BASE_PATH}/deploy.sh
 
