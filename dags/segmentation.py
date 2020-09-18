@@ -24,7 +24,6 @@ default_args = {
     'is_delete_operator_pod': True,
     'do_xcom_push': False,
     'labels': {"project": "cthulhu"},
-    # 'resources': {'request_cpu': '200m', 'request_memory': '2Gi'},
     'node_selectors': {"cloud.google.com/gke-nodepool": "n1-standard-2-pool"},
     'tolerations': [
         {
