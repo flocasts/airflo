@@ -17,12 +17,23 @@ default_args = {
     'start_date': datetime(2020, 1, 1),
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 0,
+    'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'image_pull_policy': 'Always',
+    'in_cluster': True,
     'is_delete_operator_pod': True,
     'do_xcom_push': False,
     'labels': {"project": "cthulhu"},
+    'resources': {'request_cpu': '100m', 'request_memory': '1Gi'},
+    'node_selectors': {"cloud.google.com/gke-nodepool": "n1-standard-2-pool"},
+    'tolerations': [
+        {
+            "key": "node-pool",
+            "operator": "Equal",
+            "value": "n1-standard-2-pool",
+            "effect": "NoExecute",
+        }
+    ],
     'secrets': [aws_account, aws_access_key_id, aws_secret_access_key]
 }
 
